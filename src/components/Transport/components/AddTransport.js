@@ -48,12 +48,12 @@ const AddTransport = ({ visible, onClose, refreshTransport }) => {
         throw new Error(`Error: ${response.status}`);
       }
 
-      toast.success("Transport relation added successfully!");
+      toast.success("Marrëdhënia e transportit u shtua me sukses!");
       form.resetFields();
       onClose();
       if (refreshTransport) refreshTransport();
     } catch (error) {
-      toast.error("Failed to add transport relation.");
+      toast.error("Shtimi i lidhjes së transportit dështoi.");
       console.error("Error adding transport relation:", error);
     } finally {
       setLoading(false);
