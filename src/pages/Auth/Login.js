@@ -1,40 +1,84 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { KeyIcon, UserIcon, CheckIcon, AlertCircleIcon } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { KeyIcon, UserIcon, AlertCircleIcon } from "lucide-react";
+import { getFingerprint, getFingerprintData } from "@thumbmarkjs/thumbmarkjs";
 
 export function LoginPage() {
+  const url = process.env.REACT_APP_API_URL;
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [key, setKey] = useState("");
+
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+
+  const generateFingerprint = async () => {
     try {
-      const response = await fetch("/api/User/login", {
+      const fingerprint = await getFingerprint();
+      setKey(fingerprint);
+      return fingerprint;
+    } catch (error) {
+      console.error("Error generating fingerprint:", error);
+      setErrorMessage("Failed to generate device fingerprint");
+      return null;
+    }
+  };
+  console.log(key);
+  useEffect(() => {
+    const loggedUser = localStorage.getItem("user");
+    if (loggedUser) {
+      navigate("/home");
+    }
+    generateFingerprint();
+  }, [navigate]);
+
+  const validateForm = () => {
+    let newErrors = {};
+    if (!username.trim()) newErrors.username = "Username is required";
+    if (!password) newErrors.password = "Password is required";
+    else if (password.length < 6)
+      newErrors.password = "Password must be at least 6 characters long";
+    if (!key) newErrors.key = "Device fingerprint is required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleLogIn = async (e) => {
+    e.preventDefault();
+    setErrorMessage("");
+    if (!validateForm()) return;
+    setLoading(true);
+
+    try {
+      const response = await fetch(`${url}/User/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username,
-          password,
-          rememberMe,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, key, password }),
       });
+
       if (!response.ok) {
-        throw new Error("Invalid username or password");
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Invalid credentials");
       }
-      navigate("/dashboard");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      const data = await response.json();
+      localStorage.setItem("user", JSON.stringify(data.localUser?.subject));
+      localStorage.setItem("access_token", data.authToken);
+      navigate("/home");
+    } catch (error) {
+      setErrorMessage(
+        error.message === "Failed to fetch"
+          ? "Network error. Please check your connection."
+          : error.message
+      );
     } finally {
       setLoading(false);
     }
   };
+
   return (
     <div className="flex min-h-screen w-full">
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
@@ -45,13 +89,13 @@ export function LoginPage() {
             </h1>
             <p className="text-gray-600">Login to access your account</p>
           </div>
-          {error && (
+          {errorMessage && (
             <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg flex items-center mb-6">
               <AlertCircleIcon size={20} className="mr-2" />
-              <span>{error}</span>
+              <span>{errorMessage}</span>
             </div>
           )}
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleLogIn}>
             <div className="mb-6">
               <label
                 htmlFor="username"
@@ -96,6 +140,11 @@ export function LoginPage() {
                 />
               </div>
             </div>
+            {/* {key && (
+              <div className="mb-6 text-sm text-gray-600">
+                Device Fingerprint: {key.substring(0, 10)}...
+              </div>
+            )} */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
                 <input
@@ -123,7 +172,7 @@ export function LoginPage() {
             </div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !key} // Disable if no fingerprint
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#1D4260] hover:bg-[#2A5A80] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1D4260] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign in"}
@@ -152,4 +201,5 @@ export function LoginPage() {
     </div>
   );
 }
+
 export default LoginPage;

@@ -1,11 +1,18 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/Navbar/lirimilogo.png";
 import { IoIosStarOutline } from "react-icons/io";
 import { GrCart } from "react-icons/gr";
 import { CiSearch } from "react-icons/ci";
 
 const Navbar = () => {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("access_token");
+    navigate("/login");
+  };
   return (
     <nav className="fixed w-full flex items-center justify-between z-[100] bg-[--secondary-color]  px-[max(25px,2vw)] shadow-md">
       <div className="flex items-center justify-between w-full">
@@ -59,9 +66,12 @@ const Navbar = () => {
         <div className="flex items-center gap-5">
           <IoIosStarOutline className="text-white text-[max(13px,1.2vw)]" />
           <GrCart className="text-white text-[max(13px,1vw)]" />
-          <Link to={"/login"} className="text-white text-[max(13px,1vw)]">
-            Kyçu
-          </Link>
+          <div
+            onClick={handleLogout}
+            className="text-white text-[max(13px,1vw)]"
+          >
+            Log Out
+          </div>
         </div>
       </div>
     </nav>
