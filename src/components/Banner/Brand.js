@@ -48,7 +48,7 @@ const Brand = () => {
   return (
     <div className="mt-20 w-full mb-10">
       <div className="bg-gradient-to-r from-blue-400 to-blue-600 text-white py-4 px-6 text-xl font-bold">
-        Popular Brands
+        Markat e Njohura
       </div>
       <div className="grid grid-cols-1 px-10 sm:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-10 mt-4">
         {brand.map((item) => (
@@ -63,7 +63,7 @@ const Brand = () => {
             />
             <h4 className="text-lg font-medium">{item.title}</h4>
             <span className="text-blue-500 cursor-pointer mt-2">
-              Go to all Models
+              Shkoni te të gjitha modelet
             </span>
           </Link>
         ))}

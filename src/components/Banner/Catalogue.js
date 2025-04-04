@@ -28,13 +28,13 @@ const Catalogue = () => {
   return (
     <div className="mt-20 w-full">
       <div className="bg-gradient-to-r from-blue-400 to-blue-600 text-white py-4 px-6 text-xl font-bold">
-        VEHICLE CATALOGUE: SELECT YOUR VEHICLE
+        KATALOGI I MJETEVE: ZGJIDHNI MJETET TUAJ
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 w-full px-6">
         <select className="w-full pl-5 pr-8 py-3 border rounded-lg shadow-sm outline-none">
           <option value="" disabled selected className="text-gray-400">
-            Select Brand
+            Zgjidhni Markën
           </option>
           <option value="bmw">BMW</option>
           <option value="audi">Audi</option>
@@ -43,7 +43,7 @@ const Catalogue = () => {
 
         <select className="w-full pl-5 pr-8 py-3 border rounded-lg shadow-sm outline-none">
           <option value="" disabled selected className="text-gray-400">
-            Select Model
+            Zgjidhni Modelin
           </option>
           <option value="x5">X5</option>
           <option value="a6">A6</option>
@@ -52,7 +52,7 @@ const Catalogue = () => {
 
         <select className="w-full pl-5 pr-8 py-3 border rounded-lg shadow-sm outline-none">
           <option value="" disabled selected className="text-gray-400">
-            Select Type
+            Zgjidhni Llojin
           </option>
           <option value="sedan">Sedan</option>
           <option value="suv">SUV</option>

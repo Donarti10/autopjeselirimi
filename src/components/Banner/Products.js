@@ -60,7 +60,7 @@ const Products = () => {
   return (
     <div className="mt-20 w-full mb-10">
       <div className="bg-gradient-to-r from-blue-400 to-blue-600 text-white py-4 px-6 text-xl font-bold">
-        RECOMMENDED PRODUCTS
+        PRODUKTET E REKOMANDUARA
       </div>
 
       <div className="mt-10 px-6">

@@ -8,7 +8,9 @@ import {
   LiaAngleDoubleLeftSolid,
   LiaAngleDoubleRightSolid,
 } from "react-icons/lia";
+import { FiUsers } from "react-icons/fi";
 import distributor from "../../assets/Brand/elita2.jpg";
+import { Link } from "react-router-dom";
 
 const Sidebar = ({ onToggle }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -25,28 +27,36 @@ const Sidebar = ({ onToggle }) => {
 
   const sidebarItems = [
     {
-      name: "Orders",
+      name: <Link to="/users">Subjektet dhe Përdoruesit</Link>,
+      icon: <FiUsers />,
+    },
+    {
+      name: <Link to="/subject">Subjektet</Link>,
+      icon: <FiUsers />,
+    },
+    {
+      name: "Porositë",
       icon: <HiOutlineClipboardDocumentList />,
     },
     {
-      name: "Office Supplies",
+      name: "Pajisjet e Zyrës",
       icon: <IoDocumentTextOutline />,
       dropdownItems: ["Item 1", "Item 2", "Item 3"],
     },
     {
-      name: "Wear Parts",
+      name: "Pjesë që Përdoren",
       icon: <LiaOilCanSolid />,
     },
     {
-      name: "Workshop Equipment",
+      name: "Pajisjet e Punës",
       icon: <GiMechanicGarage />,
     },
     {
-      name: "Offers",
+      name: "Ofertat",
       icon: <IoGiftOutline />,
     },
     {
-      name: "Messages",
+      name: "Mesazhet",
       icon: <MdOutlineMessage />,
     },
   ];
@@ -104,7 +114,7 @@ const Sidebar = ({ onToggle }) => {
           <>
             <LiaAngleDoubleLeftSolid className="group-hover:text-[var(--primary-color)] transition-colors duration-300" />
             <span className="group-hover:text-[var(--text-color)] whitespace-nowrap">
-              Hide menu
+              Fshih Menunë
             </span>
           </>
         )}
@@ -116,7 +126,7 @@ const Sidebar = ({ onToggle }) => {
             isCollapsed ? "hidden" : "block"
           } text-gray-700`}
         >
-          Our Distributor
+          Distributori ynë
         </span>
         <img src={distributor} alt="Distributor Logo" className="" />
       </div>

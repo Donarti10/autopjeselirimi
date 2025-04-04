@@ -47,7 +47,7 @@ const Manufacturers = () => {
   return (
     <div className="mt-20 w-full mb-10">
       <div className="bg-gradient-to-r from-blue-400 to-blue-600 text-white py-4 px-6 text-xl font-bold">
-        Popular Brands
+        Markat e Njohura
       </div>
       <div className="grid m-auto grid-cols-5 gap-4 mt-6 p-4">
         {manufa.map((brand, index) => (

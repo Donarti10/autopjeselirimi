@@ -172,7 +172,7 @@ export function LoginPage() {
             </div>
             <button
               type="submit"
-              disabled={loading || !key} // Disable if no fingerprint
+              disabled={loading || !key}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#1D4260] hover:bg-[#2A5A80] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1D4260] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign in"}
