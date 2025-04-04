@@ -1,20 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { KeyIcon, UserIcon, AlertCircleIcon } from "lucide-react";
-import { getFingerprint, getFingerprintData } from "@thumbmarkjs/thumbmarkjs";
+import {
+  KeyIcon,
+  UserIcon,
+  AlertCircleIcon,
+  CopyIcon,
+  CheckIcon,
+} from "lucide-react";
+import { getFingerprint } from "@thumbmarkjs/thumbmarkjs";
 
 export function LoginPage() {
   const url = process.env.REACT_APP_API_URL;
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [key, setKey] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
-
+  console.log(errorMessage);
   const generateFingerprint = async () => {
     try {
       const fingerprint = await getFingerprint();
@@ -26,7 +34,7 @@ export function LoginPage() {
       return null;
     }
   };
-  console.log(key);
+
   useEffect(() => {
     const loggedUser = localStorage.getItem("user");
     if (loggedUser) {
@@ -47,10 +55,21 @@ export function LoginPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleCopy = () => {
+    navigator.clipboard.writeText(key);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const handleLogIn = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
+
     setErrorMessage("");
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
     try {
@@ -60,21 +79,36 @@ export function LoginPage() {
         body: JSON.stringify({ username, key, password }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Invalid credentials");
-      }
       const data = await response.json();
+
+      if (!data.isAuthenticated) {
+        if (data.message === "Celsi i konfigurimit nuk perputhet!") {
+          setErrorMessage(data?.message);
+          console.log(
+            "Error message set to: Nuk jeni i autorizuar te kyqeni ne kete browser"
+          );
+        } else {
+          setErrorMessage(data.message || "Invalid credentials");
+          console.log(
+            "Error message set to:",
+            data.message || "Invalid credentials"
+          );
+        }
+        setLoading(false);
+        return;
+      }
+
       localStorage.setItem("user", JSON.stringify(data.localUser?.subject));
       localStorage.setItem("access_token", data.authToken);
       navigate("/home");
     } catch (error) {
+      console.error("Login error:", error);
       setErrorMessage(
         error.message === "Failed to fetch"
           ? "Network error. Please check your connection."
-          : error.message
+          : "An error occurred during login"
       );
-    } finally {
+      console.log("Error message set to:", errorMessage);
       setLoading(false);
     }
   };
@@ -95,7 +129,7 @@ export function LoginPage() {
               <span>{errorMessage}</span>
             </div>
           )}
-          <form onSubmit={handleLogIn}>
+          <form onSubmit={handleLogIn} noValidate>
             <div className="mb-6">
               <label
                 htmlFor="username"
@@ -140,11 +174,15 @@ export function LoginPage() {
                 />
               </div>
             </div>
-            {/* {key && (
-              <div className="mb-6 text-sm text-gray-600">
-                Device Fingerprint: {key.substring(0, 10)}...
-              </div>
-            )} */}
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={() => setShowModal(true)}
+                className="w-full flex justify-center py-3 px-4 border border-[#1D4260] rounded-lg text-sm font-medium text-[#1D4260] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1D4260]"
+              >
+                Gjenero kodin
+              </button>
+            </div>
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
                 <input
@@ -198,6 +236,37 @@ export function LoginPage() {
           </div>
         </div>
       </div>
+
+      {showModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg capitalize font-medium text-gray-900 mb-4">
+              çelsi i konfigurimit
+            </h3>
+            <div className="flex items-center bg-gray-100 p-3 rounded-lg mb-4">
+              <span className="flex-1 text-sm text-gray-700 break-all">
+                {key}
+              </span>
+              <button
+                onClick={handleCopy}
+                className="ml-2 p-2 text-gray-600 hover:text-gray-800"
+              >
+                {copied ? (
+                  <CheckIcon size={18} className="text-green-500" />
+                ) : (
+                  <CopyIcon size={18} />
+                )}
+              </button>
+            </div>
+            <button
+              onClick={() => setShowModal(false)}
+              className="w-full py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+              Mbyll
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
