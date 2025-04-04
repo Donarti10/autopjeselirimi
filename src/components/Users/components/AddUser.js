@@ -1,34 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, Input, Button, Form, Select, message } from "antd";
+import {
+  Drawer,
+  Input,
+  Button,
+  Form,
+  Select,
+  AutoComplete,
+  message,
+} from "antd";
 
 const AddUserDrawer = ({ visible, onClose, refreshUsers }) => {
   const url = process.env.REACT_APP_API_URL;
   const [form] = Form.useForm();
-  const [subjects, setSubjects] = useState([]);
+  const [subjectOptions, setSubjectOptions] = useState([]);
   const [roles, setRoles] = useState([]);
-  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [loadingRoles, setLoadingRoles] = useState(false);
-
-  useEffect(() => {
-    const fetchSubjects = async () => {
-      setLoadingSubjects(true);
-      try {
-        const response = await fetch(`${url}/Subjects/search`);
-        if (!response.ok) {
-          throw new Error(`Error: ${response.status}`);
-        }
-        const data = await response.json();
-        setSubjects(data);
-      } catch (error) {
-        message.error("Failed to fetch subjects.");
-        console.error("Error fetching subjects:", error);
-      } finally {
-        setLoadingSubjects(false);
-      }
-    };
-
-    fetchSubjects();
-  }, [url]);
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -47,36 +33,56 @@ const AddUserDrawer = ({ visible, onClose, refreshUsers }) => {
         setLoadingRoles(false);
       }
     };
-
     fetchRoles();
   }, [url]);
 
-  const onFinish = async (values) => {
-    const payload = {
-      id: 0,
-      subject: values.subject || 0,
-      key: null,
-      roleID: values.roleID || 0,
-      firstName: values.firstName || "",
-      lastName: values.lastName || "",
-      username: values.username || "",
-      password: values.password || "",
-      note: values.note || "",
-    };
+  const handleSubjectSearch = async (value) => {
+    if (!value) {
+      setSubjectOptions([]);
+      return;
+    }
+    try {
+      const response = await fetch(
+        `${url}/Subjects/search?value=${encodeURIComponent(value)}`
+      );
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const data = await response.json();
+      const options = data.map((subject) => ({
+        value: subject.$ID.toString(),
+        label: subject.Emertimi,
+      }));
+      setSubjectOptions(options);
+    } catch (error) {
+      message.error("Failed to search subjects.");
+      console.error("Error searching subjects:", error);
+    }
+  };
 
+  const onFinish = async (values) => {
+    const postData = {
+      id: 0,
+      subject: values.subject,
+      key: values.key,
+      roleID: values.roleID,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      username: values.username,
+      password: values.password,
+      note: values.note,
+    };
     try {
       const response = await fetch(`${url}/User`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json-patch+json",
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(postData),
       });
-
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
-
       message.success("User added successfully!");
       form.resetFields();
       if (onClose) onClose();
@@ -92,28 +98,24 @@ const AddUserDrawer = ({ visible, onClose, refreshUsers }) => {
       title="Shto Përdorues"
       placement="right"
       onClose={onClose}
-      visible={visible}
+      open={visible}
       width={600}
     >
       <Form layout="vertical" form={form} onFinish={onFinish}>
         <Form.Item
           label="Subjekti"
           name="subject"
-          rules={[{ required: true, message: "Zgjidh një subjekt!" }]}
+          rules={[{ required: true, message: "Kërko një subjekt!" }]}
         >
-          <Select
-            loading={loadingSubjects}
-            placeholder="Zgjidh një subjekt"
-            allowClear
-          >
-            {subjects.map((subject) => (
-              <Select.Option key={subject.id} value={subject.id}>
-                {subject.name}
-              </Select.Option>
-            ))}
-          </Select>
+          <AutoComplete
+            placeholder="Kërko subjektin"
+            options={subjectOptions}
+            onSearch={handleSubjectSearch}
+            value={subjectOptions?.Emertimi}
+            filterOption={false}
+            optionLabelProp="label"
+          />
         </Form.Item>
-
         <Form.Item
           label="Roli"
           name="roleID"
@@ -131,9 +133,12 @@ const AddUserDrawer = ({ visible, onClose, refreshUsers }) => {
             ))}
           </Select>
         </Form.Item>
-
-        <Form.Item label="Çelësi" name="key">
-          <Input placeholder="Vendos çelësin" />
+        <Form.Item
+          label="Çelsi"
+          name="key"
+          rules={[{ required: true, message: "Vendos një Çels " }]}
+        >
+          <Input placeholder="Vendos një Çelsë" />
         </Form.Item>
         <Form.Item label="Emri" name="firstName">
           <Input placeholder="Vendos emrin" />
