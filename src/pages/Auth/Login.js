@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  KeyIcon,
-  UserIcon,
-  AlertCircleIcon,
-  CopyIcon,
-  CheckIcon,
-} from "lucide-react";
+import { KeyIcon, UserIcon, AlertCircleIcon } from "lucide-react";
 import { getFingerprint } from "@thumbmarkjs/thumbmarkjs";
 
 export function LoginPage() {
@@ -14,14 +8,16 @@ export function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [key, setKey] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [copied, setCopied] = useState(false);
-
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [sendKeyLoading, setSendKeyLoading] = useState(false);
+  const [sendKeyMessage, setSendKeyMessage] = useState("");
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
+
   const generateFingerprint = async () => {
     try {
       const fingerprint = await getFingerprint();
@@ -34,12 +30,40 @@ export function LoginPage() {
     }
   };
 
+  const getLocation = () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocation is not supported by this browser"));
+      } else {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setLatitude(position.coords.latitude);
+            setLongitude(position.coords.longitude);
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+            });
+          },
+          (error) => {
+            reject(error);
+          }
+        );
+      }
+    });
+  };
+
   useEffect(() => {
     const loggedUser = localStorage.getItem("user");
     if (loggedUser) {
       navigate("/home");
     }
-    generateFingerprint();
+
+    Promise.all([generateFingerprint(), getLocation()]).catch((error) => {
+      console.error("Initialization error:", error);
+      if (error.message.includes("geolocation")) {
+        setErrorMessage("Please allow location access to proceed");
+      }
+    });
   }, [navigate]);
 
   const validateForm = () => {
@@ -49,15 +73,52 @@ export function LoginPage() {
     else if (password.length < 6)
       newErrors.password = "Password must be at least 6 characters long";
     if (!key) newErrors.key = "Device fingerprint is required";
+    if (latitude === null || longitude === null)
+      newErrors.location = "Location data is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(key);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const handleSendKey = async () => {
+    if (!key) {
+      setErrorMessage("No key generated to send");
+      return;
+    }
+    if (latitude === null || longitude === null) {
+      setErrorMessage("Location data not available");
+      return;
+    }
+
+    setSendKeyLoading(true);
+    setSendKeyMessage("");
+
+    try {
+      const payload = {
+        id: 0,
+        key: key,
+        latitude: latitude,
+        longitude: longitude,
+      };
+
+      const response = await fetch(`${url}/User/send-key`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send key");
+      }
+
+      setSendKeyMessage("Çelësi u dërgua me sukses!");
+      setTimeout(() => setSendKeyMessage(""), 3000);
+    } catch (error) {
+      console.error("Error sending key:", error);
+      setSendKeyMessage("Failed to send key");
+    } finally {
+      setSendKeyLoading(false);
+    }
   };
 
   const handleLogIn = async (e) => {
@@ -83,15 +144,8 @@ export function LoginPage() {
       if (!data.isAuthenticated) {
         if (data.message === "Celsi i konfigurimit nuk perputhet!") {
           setErrorMessage(data?.message);
-          console.log(
-            "Error message set to: Nuk jeni i autorizuar te kyqeni ne kete browser"
-          );
         } else {
           setErrorMessage(data.message || "Invalid credentials");
-          console.log(
-            "Error message set to:",
-            data.message || "Invalid credentials"
-          );
         }
         setLoading(false);
         return;
@@ -107,7 +161,6 @@ export function LoginPage() {
           ? "Network error. Please check your connection."
           : "An error occurred during login"
       );
-      console.log("Error message set to:", errorMessage);
       setLoading(false);
     }
   };
@@ -126,6 +179,18 @@ export function LoginPage() {
             <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg flex items-center mb-6">
               <AlertCircleIcon size={20} className="mr-2" />
               <span>{errorMessage}</span>
+            </div>
+          )}
+          {sendKeyMessage && (
+            <div
+              className={`border px-4 py-3 rounded-lg flex items-center mb-6 ${
+                sendKeyMessage.includes("sukses")
+                  ? "bg-green-50 border-green-300 text-green-700"
+                  : "bg-red-50 border-red-300 text-red-700"
+              }`}
+            >
+              <AlertCircleIcon size={20} className="mr-2" />
+              <span>{sendKeyMessage}</span>
             </div>
           )}
           <form onSubmit={handleLogIn} noValidate>
@@ -176,10 +241,42 @@ export function LoginPage() {
             <div className="mb-6">
               <button
                 type="button"
-                onClick={() => setShowModal(true)}
-                className="w-full flex justify-center py-3 px-4 border border-[#1D4260] rounded-lg text-sm font-medium text-[#1D4260] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1D4260]"
+                onClick={handleSendKey}
+                disabled={
+                  sendKeyLoading ||
+                  !key ||
+                  latitude === null ||
+                  longitude === null
+                }
+                className="w-full flex justify-center py-3 px-4 border border-[#1D4260] rounded-lg text-sm font-medium text-[#1D4260] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1D4260] disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Gjenero kodin
+                {sendKeyLoading ? (
+                  <div className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-[#1D4260]"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Sending...
+                  </div>
+                ) : (
+                  "Dërgo kodin"
+                )}
               </button>
             </div>
             <div className="flex items-center justify-between mb-6">
@@ -209,7 +306,9 @@ export function LoginPage() {
             </div>
             <button
               type="submit"
-              disabled={loading || !key}
+              disabled={
+                loading || !key || latitude === null || longitude === null
+              }
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#1D4260] hover:bg-[#2A5A80] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1D4260] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign in"}
@@ -235,37 +334,6 @@ export function LoginPage() {
           </div>
         </div>
       </div>
-
-      {showModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg capitalize font-medium text-gray-900 mb-4">
-              çelsi i konfigurimit
-            </h3>
-            <div className="flex items-center bg-gray-100 p-3 rounded-lg mb-4">
-              <span className="flex-1 text-sm text-gray-700 break-all">
-                {key}
-              </span>
-              <button
-                onClick={handleCopy}
-                className="ml-2 p-2 text-gray-600 hover:text-gray-800"
-              >
-                {copied ? (
-                  <CheckIcon size={18} className="text-green-500" />
-                ) : (
-                  <CopyIcon size={18} />
-                )}
-              </button>
-            </div>
-            <button
-              onClick={() => setShowModal(false)}
-              className="w-full py-2 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-              Mbyll
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
