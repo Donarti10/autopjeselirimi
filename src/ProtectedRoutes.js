@@ -36,7 +36,7 @@ const ProtectedRoutes = () => {
         return;
       }
 
-      if (!["1", "2", "3"].includes(decodedToken.RoleID)) {
+      if (!["1", "2", "3", "4"].includes(decodedToken.RoleID)) {
         toast.error("Unauthorized role. Redirecting to login.");
         localStorage.clear();
         sessionStorage.clear();
