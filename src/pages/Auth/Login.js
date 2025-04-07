@@ -22,7 +22,6 @@ export function LoginPage() {
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
-  console.log(errorMessage);
   const generateFingerprint = async () => {
     try {
       const fingerprint = await getFingerprint();

@@ -9,6 +9,7 @@
     "@thumbmarkjs/thumbmarkjs": "^0.20.0",
     "ajv": "^8.17.1",
     "antd": "^5.22.4",
+    "axios": "^1.8.4",
     "dotenv": "^16.4.7",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.486.0",

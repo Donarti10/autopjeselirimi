@@ -8,6 +8,7 @@ import {
   AutoComplete,
   message,
 } from "antd";
+import toast from "react-hot-toast";
 
 const AddUserDrawer = ({ visible, onClose, refreshUsers }) => {
   const url = process.env.REACT_APP_API_URL;
@@ -27,7 +28,7 @@ const AddUserDrawer = ({ visible, onClose, refreshUsers }) => {
         const data = await response.json();
         setRoles(data);
       } catch (error) {
-        message.error("Failed to fetch roles.");
+        toast.error("Failed to fetch roles.");
         console.error("Error fetching roles:", error);
       } finally {
         setLoadingRoles(false);
@@ -55,7 +56,7 @@ const AddUserDrawer = ({ visible, onClose, refreshUsers }) => {
       }));
       setSubjectOptions(options);
     } catch (error) {
-      message.error("Failed to search subjects.");
+      toast.error("Failed to search subjects.");
       console.error("Error searching subjects:", error);
     }
   };
@@ -83,12 +84,12 @@ const AddUserDrawer = ({ visible, onClose, refreshUsers }) => {
       if (!response.ok) {
         throw new Error(`Error: ${response.status}`);
       }
-      message.success("User added successfully!");
+      toast.success("User added successfully!");
       form.resetFields();
       if (onClose) onClose();
       if (refreshUsers) refreshUsers();
     } catch (error) {
-      message.error("Failed to add user.");
+      toast.error("Failed to add user.");
       console.error("Error adding user:", error);
     }
   };
