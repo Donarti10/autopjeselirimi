@@ -6,23 +6,35 @@ import LoginPage from "./pages/Auth/Login";
 import ProtectedRoutes from "./ProtectedRoutes";
 import UsersPage from "./pages/UsersPage/UsersPage";
 import SubjectPage from "./pages/SubjectPage/SubjectPage";
+import { Toaster } from "react-hot-toast";
+import Dashboard from "./pages/Dashboard/Dashboard";
+import ItemsPage from "./pages/ItemsPage/ItemsPage";
+import CommunicationPage from "./pages/CommunicationPage/CommunicationPage";
+import EditUser from "./components/Users/components/EditUser";
+import TransportRelation from "./pages/TransportRelation/TransportRelation";
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route>
+    <div className="App">
+      <Toaster position="top-right" />
+      <Router>
+        <Routes>
           <Route path="/login" element={<LoginPage />} />
-        </Route>
-        <Route element={<ProtectedRoutes />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/detail" element={<DetailProduct />} />
-          <Route path="/users" element={<UsersPage />} />
-          <Route path="/subject" element={<SubjectPage />} />
-        </Route>
-      </Routes>
-    </Router>
+          <Route element={<ProtectedRoutes />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/detail" element={<DetailProduct />} />
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/edituser/:id" element={<EditUser />} />
+            <Route path="/subject" element={<SubjectPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/items" element={<ItemsPage />} />
+            <Route path="/communication" element={<CommunicationPage />} />
+            <Route path="/transport" element={<TransportRelation />} />
+          </Route>
+        </Routes>
+      </Router>
+    </div>
   );
 }
 

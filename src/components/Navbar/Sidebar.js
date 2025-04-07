@@ -1,13 +1,12 @@
 import React, { useState } from "react";
-import { HiOutlineClipboardDocumentList } from "react-icons/hi2";
-import { IoDocumentTextOutline, IoGiftOutline } from "react-icons/io5";
-import { LiaOilCanSolid } from "react-icons/lia";
-import { GiMechanicGarage } from "react-icons/gi";
-import { MdOutlineMessage } from "react-icons/md";
+import { RiListCheck3 } from "react-icons/ri";
+import { IoIosStats } from "react-icons/io";
+
 import {
   LiaAngleDoubleLeftSolid,
   LiaAngleDoubleRightSolid,
 } from "react-icons/lia";
+import { TbTruckDelivery } from "react-icons/tb";
 import { FiUsers } from "react-icons/fi";
 import distributor from "../../assets/Brand/elita2.jpg";
 import { Link } from "react-router-dom";
@@ -27,50 +26,35 @@ const Sidebar = ({ onToggle }) => {
 
   const sidebarItems = [
     {
+      name: <Link to="/dashboard">Paneli</Link>,
+      icon: <IoIosStats />,
+    },
+    {
       name: <Link to="/users">Subjektet dhe Përdoruesit</Link>,
       icon: <FiUsers />,
     },
     {
-      name: <Link to="/subject">Subjektet</Link>,
-      icon: <FiUsers />,
+      name: <Link to="/items">Artikujt</Link>,
+      icon: <RiListCheck3 />,
     },
+
     {
-      name: "Porositë",
-      icon: <HiOutlineClipboardDocumentList />,
-    },
-    {
-      name: "Pajisjet e Zyrës",
-      icon: <IoDocumentTextOutline />,
-      dropdownItems: ["Item 1", "Item 2", "Item 3"],
-    },
-    {
-      name: "Pjesë që Përdoren",
-      icon: <LiaOilCanSolid />,
-    },
-    {
-      name: "Pajisjet e Punës",
-      icon: <GiMechanicGarage />,
-    },
-    {
-      name: "Ofertat",
-      icon: <IoGiftOutline />,
-    },
-    {
-      name: "Mesazhet",
-      icon: <MdOutlineMessage />,
+      name: <Link to="/transport">Linjë Transporti </Link>,
+      icon: <TbTruckDelivery />,
     },
   ];
 
   return (
     <div
       className={`h-screen sticky top-0 bg-gray-50 border-r overflow-x-hidden border-gray-200 shadow-md transition-all duration-300 ${
-        isCollapsed ? "w-16" : "w-86"
+        isCollapsed ? "w-16" : "w-80"
       } flex-shrink-0`}
     >
       <ul className="pt-20">
         {sidebarItems.map((item, index) => (
           <li key={index}>
-            <div
+            <Link
+              to={item.name.props.to}
               className={`flex items-center gap-2 w-full cursor-pointer h-12 pl-4 py-8 border-b border-gray-300
               transition-colors duration-300 hover:bg-[var(--secondary-color)] group`}
               onClick={() => item.dropdownItems && toggleDropdown(index)}
@@ -85,7 +69,7 @@ const Sidebar = ({ onToggle }) => {
               >
                 {item.name}
               </span>
-            </div>
+            </Link>
             {item.dropdownItems && openDropdownIndex === index && (
               <div className="transition-all duration-300 max-h-40 opacity-100 overflow-hidden">
                 <ul className="space-y-2">
@@ -114,7 +98,7 @@ const Sidebar = ({ onToggle }) => {
           <>
             <LiaAngleDoubleLeftSolid className="group-hover:text-[var(--primary-color)] transition-colors duration-300" />
             <span className="group-hover:text-[var(--text-color)] whitespace-nowrap">
-              Fshih Menunë
+              Mbyll
             </span>
           </>
         )}
