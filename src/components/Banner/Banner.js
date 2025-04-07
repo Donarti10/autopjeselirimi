@@ -18,7 +18,7 @@ const Banner = () => {
     <div className="flex h-screen">
       <div
         className={`transition-all duration-300 ${
-          isSidebarCollapsed ? "w-[4rem]" : "w-[23%]"
+          isSidebarCollapsed ? "w-[4rem]" : "w-[20%]"
         }`}
       >
         <Sidebar onToggle={handleSidebarToggle} />
@@ -26,7 +26,7 @@ const Banner = () => {
 
       <div
         className={`transition-all duration-300 overflow-y-auto ${
-          isSidebarCollapsed ? "w-[calc(100%-4rem)]" : "w-[80%]"
+          isSidebarCollapsed ? "w-[calc(100%-4rem)]" : "w-[100%]"
         }`}
       >
         <Catalogue isSidebarCollapsed={isSidebarCollapsed} />
