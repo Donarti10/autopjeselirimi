@@ -7,7 +7,7 @@ export function LoginPage() {
   const url = process.env.REACT_APP_API_URL;
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [key, setKey] = useState(null); // Initialize as null to track if it's been set
+  const [key, setKey] = useState(null);
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [rememberMe, setRememberMe] = useState(false);
@@ -17,10 +17,8 @@ export function LoginPage() {
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
-
   const generateFingerprint = async () => {
     try {
-      // If key is already set, return it (avoid regenerating)
       if (key) {
         return key;
       }
@@ -37,7 +35,7 @@ export function LoginPage() {
   const getLocation = () => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error("Geolocation is not supported by this browser"));
+        resolve({ latitude: null, longitude: null });
       } else {
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -48,8 +46,8 @@ export function LoginPage() {
               longitude: position.coords.longitude,
             });
           },
-          (error) => {
-            reject(error);
+          () => {
+            resolve({ latitude: null, longitude: null });
           }
         );
       }
@@ -63,14 +61,10 @@ export function LoginPage() {
       return;
     }
 
-    // Generate fingerprint and get location only once on mount
     Promise.all([generateFingerprint(), getLocation()]).catch((error) => {
       console.error("Initialization error:", error);
-      if (error.message.includes("geolocation")) {
-        setErrorMessage("Please allow location access to proceed");
-      }
     });
-  }, [navigate]); // Removed `key` from dependencies to prevent re-running
+  }, [navigate]);
 
   const validateForm = () => {
     let newErrors = {};
@@ -79,8 +73,7 @@ export function LoginPage() {
     else if (password.length < 6)
       newErrors.password = "Password must be at least 6 characters long";
     if (!key) newErrors.key = "Device fingerprint is required";
-    if (latitude === null || longitude === null)
-      newErrors.location = "Location data is required";
+    // Removed location requirement
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -91,10 +84,7 @@ export function LoginPage() {
       setErrorMessage("No key generated to send");
       return;
     }
-    if (latitude === null || longitude === null) {
-      setErrorMessage("Location data not available");
-      return;
-    }
+    // Location check removed, will send with null values if not available
 
     setSendKeyLoading(true);
     setSendKeyMessage("");
@@ -103,8 +93,8 @@ export function LoginPage() {
       const payload = {
         id: 0,
         key: key,
-        latitude: latitude,
-        longitude: longitude,
+        latitude: latitude, // Will send null if not available
+        longitude: longitude, // Will send null if not available
       };
 
       const response = await fetch(`${url}/User/send-key`, {
@@ -248,12 +238,7 @@ export function LoginPage() {
               <button
                 type="button"
                 onClick={handleSendKey}
-                disabled={
-                  sendKeyLoading ||
-                  !key ||
-                  latitude === null ||
-                  longitude === null
-                }
+                disabled={sendKeyLoading || !key}
                 className="w-full flex justify-center py-3 px-4 border border-[#1D4260] rounded-lg text-sm font-medium text-[#1D4260] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1D4260] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {sendKeyLoading ? (
@@ -312,9 +297,7 @@ export function LoginPage() {
             </div>
             <button
               type="submit"
-              disabled={
-                loading || !key || latitude === null || longitude === null
-              }
+              disabled={loading || !key}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[#1D4260] hover:bg-[#2A5A80] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1D4260] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Signing in..." : "Sign in"}
