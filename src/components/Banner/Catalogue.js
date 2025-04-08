@@ -1,11 +1,14 @@
 import React from "react";
 import Carousel from "react-multi-carousel";
 import "react-multi-carousel/lib/styles.css";
+import { Select } from "antd";
 
 import image1 from "../../assets/Banner/img1.jpg";
 import image2 from "../../assets/Banner/img2.webp";
 import image3 from "../../assets/Banner/img3.jpg";
 import image4 from "../../assets/Banner/img4.jpg";
+
+const { Option } = Select;
 
 const Catalogue = () => {
   const images = [image1, image2, image3, image4];
@@ -32,32 +35,23 @@ const Catalogue = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 w-full px-6">
-        <select className="w-full pl-5 pr-8 py-3 border rounded-lg shadow-sm outline-none">
-          <option value="" disabled selected className="text-gray-400">
-            Zgjidhni Markën
-          </option>
-          <option value="bmw">BMW</option>
-          <option value="audi">Audi</option>
-          <option value="mercedes">Mercedes</option>
-        </select>
+        <Select size="large" className="w-full" placeholder="Zgjidhni Markën">
+          <Option value="bmw">BMW</Option>
+          <Option value="audi">Audi</Option>
+          <Option value="mercedes">Mercedes</Option>
+        </Select>
 
-        <select className="w-full pl-5 pr-8 py-3 border rounded-lg shadow-sm outline-none">
-          <option value="" disabled selected className="text-gray-400">
-            Zgjidhni Modelin
-          </option>
-          <option value="x5">X5</option>
-          <option value="a6">A6</option>
-          <option value="c-class">C-Class</option>
-        </select>
+        <Select size="large" className="w-full" placeholder="Zgjidhni Modelin">
+          <Option value="x5">X5</Option>
+          <Option value="a6">A6</Option>
+          <Option value="c-class">C-Class</Option>
+        </Select>
 
-        <select className="w-full pl-5 pr-8 py-3 border rounded-lg shadow-sm outline-none">
-          <option value="" disabled selected className="text-gray-400">
-            Zgjidhni Llojin
-          </option>
-          <option value="sedan">Sedan</option>
-          <option value="suv">SUV</option>
-          <option value="coupe">Coupe</option>
-        </select>
+        <Select size="large" className="w-full" placeholder="Zgjidhni Llojin">
+          <Option value="sedan">Sedan</Option>
+          <Option value="suv">SUV</Option>
+          <Option value="coupe">Coupe</Option>
+        </Select>
       </div>
 
       <div className="mt-10 px-6">

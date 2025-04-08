@@ -12,6 +12,8 @@ import ItemsPage from "./pages/ItemsPage/ItemsPage";
 import CommunicationPage from "./pages/CommunicationPage/CommunicationPage";
 import EditUser from "./components/Users/components/EditUser";
 import TransportRelation from "./pages/TransportRelation/TransportRelation";
+import CartPage from "./pages/Cart/CartPage";
+import CartDetailsPage from "./pages/Cart/CartDetailsPage";
 
 function App() {
   return (
@@ -31,6 +33,8 @@ function App() {
             <Route path="/items" element={<ItemsPage />} />
             <Route path="/communication" element={<CommunicationPage />} />
             <Route path="/transport" element={<TransportRelation />} />
+            <Route path="/cart" element={<CartPage />} />
+            <Route path="/cartdetails/:id" element={<CartDetailsPage />} />
           </Route>
         </Routes>
       </Router>
