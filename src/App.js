@@ -12,6 +12,8 @@ import ItemsPage from "./pages/ItemsPage/ItemsPage";
 import CommunicationPage from "./pages/CommunicationPage/CommunicationPage";
 import EditUser from "./components/Users/components/EditUser";
 import TransportRelation from "./pages/TransportRelation/TransportRelation";
+import ItemsPageClient from "./pages/ItemsPageClient/ItemsPageClient";
+import ItemsClientDetails from "./components/ItemsClient/components/ItemsClientDetails";
 
 function App() {
   return (
@@ -29,6 +31,8 @@ function App() {
             <Route path="/subject" element={<SubjectPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/items" element={<ItemsPage />} />
+            <Route path="/items1" element={<ItemsPageClient />} />
+            <Route path="/itemsdetail/:id" element={<ItemsClientDetails />} />
             <Route path="/communication" element={<CommunicationPage />} />
             <Route path="/transport" element={<TransportRelation />} />
           </Route>
