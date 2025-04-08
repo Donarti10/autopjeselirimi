@@ -31,7 +31,7 @@ const ItemsClient = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const user = localStorage.getItem("user");
-  const subject = JSON.parse(user);
+  const subject = user ? JSON.parse(user).id : null;
 
   const debouncedOpenModal = debounce((photo) => {
     setSelectedPhoto(`data:image/jpeg;base64,${photo}`);
