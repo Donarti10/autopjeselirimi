@@ -73,7 +73,6 @@ export function LoginPage() {
     else if (password.length < 6)
       newErrors.password = "Password must be at least 6 characters long";
     if (!key) newErrors.key = "Device fingerprint is required";
-    // Removed location requirement
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -84,7 +83,6 @@ export function LoginPage() {
       setErrorMessage("No key generated to send");
       return;
     }
-    // Location check removed, will send with null values if not available
 
     setSendKeyLoading(true);
     setSendKeyMessage("");
@@ -93,8 +91,8 @@ export function LoginPage() {
       const payload = {
         id: 0,
         key: key,
-        latitude: latitude, // Will send null if not available
-        longitude: longitude, // Will send null if not available
+        latitude: latitude,
+        longitude: longitude,
       };
 
       const response = await fetch(`${url}/User/send-key`, {
