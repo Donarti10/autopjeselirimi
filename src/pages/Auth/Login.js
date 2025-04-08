@@ -7,7 +7,7 @@ export function LoginPage() {
   const url = process.env.REACT_APP_API_URL;
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [key, setKey] = useState("");
+  const [key, setKey] = useState(null); // Initialize as null to track if it's been set
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [rememberMe, setRememberMe] = useState(false);
@@ -20,6 +20,10 @@ export function LoginPage() {
 
   const generateFingerprint = async () => {
     try {
+      // If key is already set, return it (avoid regenerating)
+      if (key) {
+        return key;
+      }
       const fingerprint = await getFingerprint();
       setKey(fingerprint);
       return fingerprint;
@@ -56,15 +60,17 @@ export function LoginPage() {
     const loggedUser = localStorage.getItem("user");
     if (loggedUser) {
       navigate("/home");
+      return;
     }
 
+    // Generate fingerprint and get location only once on mount
     Promise.all([generateFingerprint(), getLocation()]).catch((error) => {
       console.error("Initialization error:", error);
       if (error.message.includes("geolocation")) {
         setErrorMessage("Please allow location access to proceed");
       }
     });
-  }, [navigate]);
+  }, [navigate]); // Removed `key` from dependencies to prevent re-running
 
   const validateForm = () => {
     let newErrors = {};
