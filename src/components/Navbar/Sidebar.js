@@ -26,7 +26,6 @@ const Sidebar = ({ onToggle }) => {
   } catch (e) {
     console.warn("No valid token found", e);
   }
-  console.log(roleID);
 
   // 2. decide who’s a super‑admin
   const isSuperAdmin = roleID === "1";

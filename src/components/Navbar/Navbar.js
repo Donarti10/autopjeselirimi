@@ -87,7 +87,9 @@ const Navbar = () => {
 
         <div className="flex items-center gap-5 mr-7">
           <IoIosStarOutline className="text-white text-[max(13px,1.2vw)]" />
-          <GrCart className="text-white text-[max(13px,1vw)]" />
+          <Link to={"/cart"}>
+            <GrCart className="text-white text-[max(13px,1vw)]" />
+          </Link>
           <div className="relative">
             <div
               ref={profileRef}
