@@ -1,4 +1,3 @@
-// src/components/Sidebar/Sidebar.js
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
@@ -17,20 +16,17 @@ import distributor from "../../assets/Brand/elita2.jpg";
 const Sidebar = ({ onToggle }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // 1. grab & decode token
   const token = localStorage.getItem("access_token");
   let roleID = null;
   try {
     const decoded = jwtDecode(token);
-    roleID = decoded.RoleID; // e.g. "1"
+    roleID = decoded.RoleID;
   } catch (e) {
     console.warn("No valid token found", e);
   }
 
-  // 2. decide who’s a super‑admin
   const isSuperAdmin = roleID === "1";
 
-  // 3. define your menus
   const adminItems = [
     {
       name: "Paneli",
@@ -42,12 +38,17 @@ const Sidebar = ({ onToggle }) => {
       to: "/users",
       icon: <FiUsers />,
     },
+    {
+      name: "Artikujt",
+      to: "/items",
+      icon: <RiListCheck3 />,
+    },
   ];
 
   const commonItems = [
     {
       name: "Artikujt",
-      to: "/items",
+      to: "/items1",
       icon: <RiListCheck3 />,
     },
     {
@@ -55,10 +56,8 @@ const Sidebar = ({ onToggle }) => {
       to: "/transport",
       icon: <TbTruckDelivery />,
     },
-    // …add more here
   ];
 
-  // 4. build the final list
   const sidebarItems = isSuperAdmin
     ? [...adminItems, ...commonItems]
     : [...commonItems];
@@ -96,7 +95,6 @@ const Sidebar = ({ onToggle }) => {
         ))}
       </ul>
 
-      {/* collapse/expand button */}
       <div
         onClick={toggleSidebar}
         className="p-4 flex items-center justify-end cursor-pointer hover:bg-gray-100"
@@ -111,7 +109,6 @@ const Sidebar = ({ onToggle }) => {
         )}
       </div>
 
-      {/* distributor footer */}
       <div className="mt-auto p-4 border-t border-gray-200">
         {!isCollapsed && (
           <span className="block mb-2 text-gray-700">Distributori ynë</span>
