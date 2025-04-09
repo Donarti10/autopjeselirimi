@@ -114,7 +114,6 @@ export function LoginPage() {
       setSendKeyLoading(false);
     }
   };
-  console.log(key);
   const handleLogIn = async (e) => {
     e.preventDefault();
     e.stopPropagation();
