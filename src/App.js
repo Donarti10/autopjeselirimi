@@ -16,12 +16,14 @@ import CartPage from "./pages/Cart/CartPage";
 import CartDetailsPage from "./pages/Cart/CartDetailsPage";
 import ItemsPageClient from "./pages/ItemsPageClient/ItemsPageClient";
 import ItemsClientDetails from "./components/ItemsClient/components/ItemsClientDetails";
+import Navbar from "./components/Navbar/Navbar";
 
 function App() {
   return (
     <div className="App">
       <Toaster position="top-right" />
       <Router>
+        <Navbar />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoutes />}>
@@ -33,7 +35,7 @@ function App() {
             <Route path="/subject" element={<SubjectPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/items" element={<ItemsPage />} />
-       <Route path="/items1" element={<ItemsPageClient />} />
+            <Route path="/items1" element={<ItemsPageClient />} />
             <Route path="/itemsdetail/:id" element={<ItemsClientDetails />} />
             <Route path="/communication" element={<CommunicationPage />} />
             <Route path="/transport" element={<TransportRelation />} />
