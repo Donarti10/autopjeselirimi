@@ -31,7 +31,7 @@ const ItemsClient = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const user = localStorage.getItem("user");
-  const subject = user ? JSON.parse(user).id : null;
+  const subject = JSON.parse(user);
 
   const debouncedOpenModal = debounce((photo) => {
     setSelectedPhoto(`data:image/jpeg;base64,${photo}`);
@@ -123,7 +123,7 @@ const ItemsClient = () => {
     fetchItems();
   }, [value, producerID, subjectID]);
 
-  const filteredItems = items.filter((it) => {
+  const filteredItems = items?.filter((it) => {
     const s = value.toLowerCase();
     return (
       it.Emertimi?.toLowerCase().includes(s) ||
