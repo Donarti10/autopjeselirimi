@@ -17,6 +17,7 @@ export function LoginPage() {
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
+
   const generateFingerprint = async () => {
     try {
       if (key) {
@@ -31,9 +32,8 @@ export function LoginPage() {
       return null;
     }
   };
-
   const getLocation = () => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       if (!navigator.geolocation) {
         resolve({ latitude: null, longitude: null });
       } else {
@@ -114,7 +114,7 @@ export function LoginPage() {
       setSendKeyLoading(false);
     }
   };
-
+  console.log(key);
   const handleLogIn = async (e) => {
     e.preventDefault();
     e.stopPropagation();
