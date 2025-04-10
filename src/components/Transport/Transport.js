@@ -1,15 +1,20 @@
-// Users.js
 import React, { useEffect, useState } from "react";
 import { Table, Input, Button } from "antd";
 import { IoMdAdd } from "react-icons/io";
 import { FaLock, FaUnlock } from "react-icons/fa";
+import { BsPlusCircle } from "react-icons/bs";
 import toast from "react-hot-toast";
+import AddTransportDetail from "./components/AddTransportDetail";
+import AddTransport from "./components/AddTransport";
 
 const Transport = () => {
   const url = process.env.REACT_APP_API_URL;
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [detailDrawerVisible, setDetailDrawerVisible] = useState(false);
+  const [selectedRelationId, setSelectedRelationId] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -54,13 +59,27 @@ const Transport = () => {
       title: "Aktiv",
       dataIndex: "active",
       key: "active",
-      width: "1%",
-      render: (active) =>
-        active ? (
-          <FaUnlock size={13} color="green" />
-        ) : (
-          <FaLock size={13} color="red" />
-        ),
+      width: "3%",
+      render: (active, record) => (
+        <div className="flex items-center gap-3">
+          {active ? (
+            <FaUnlock size={13} color="green" />
+          ) : (
+            <FaLock size={13} color="red" />
+          )}
+          <BsPlusCircle
+            size={13}
+            variant="twoTone"
+            color="blue-300"
+            className="cursor-pointer text-blue-500"
+            onClick={() => {
+              setSelectedRelationId(record.id);
+              setDetailDrawerVisible(true);
+            }}
+            title="Shto Detaj"
+          />
+        </div>
+      ),
     },
   ];
 
@@ -80,7 +99,7 @@ const Transport = () => {
           className="border p-2 rounded w-fit"
         />
         <Button
-          onClick={() => {}}
+          onClick={() => setDrawerVisible(true)}
           size="large"
           type="primary"
           icon={<IoMdAdd size={20} />}
@@ -109,6 +128,22 @@ const Transport = () => {
             />
           ),
         }}
+      />
+
+      <AddTransport
+        visible={drawerVisible}
+        onClose={() => setDrawerVisible(false)}
+        refreshTransport={fetchData}
+      />
+
+      <AddTransportDetail
+        visible={detailDrawerVisible}
+        onClose={() => {
+          setDetailDrawerVisible(false);
+          setSelectedRelationId(null);
+        }}
+        transportRelationId={selectedRelationId}
+        refreshTransport={fetchData}
       />
     </div>
   );

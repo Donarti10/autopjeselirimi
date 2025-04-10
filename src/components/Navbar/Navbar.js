@@ -5,12 +5,43 @@ import { IoIosStarOutline } from "react-icons/io";
 import { GrCart } from "react-icons/gr";
 import { CiSearch } from "react-icons/ci";
 import { FaUserCircle, FaUser, FaSignOutAlt } from "react-icons/fa";
+import toast from "react-hot-toast";
 
 const Navbar = () => {
+  const url = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [searchItems, setSearchItems] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [loadingSubject, setLoadingSubject] = useState(false);
+  const [producer, setProducer] = useState(0); // Default producer to 0, can be made dynamic later
+
   const profileRef = useRef(null);
   const dropdownRef = useRef(null);
+  const searchDropdownRef = useRef(null);
+  const user = localStorage.getItem("user");
+  const subjectData = user ? JSON.parse(user) : null;
+  const defaultSubject = subjectData?.ID || 706;
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      setLoadingSubject(true);
+      try {
+        const res = await fetch(`${url}/Subjects/search`);
+        if (!res.ok) throw new Error(res.statusText);
+        const data = await res.json();
+        setSubjects(data);
+      } catch (err) {
+        toast.error("Failed to load subjects.");
+        console.error(err);
+      } finally {
+        setLoadingSubject(false);
+      }
+    };
+    fetchSubjects();
+  }, [url]);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -28,6 +59,12 @@ const Navbar = () => {
       ) {
         setIsDropdownOpen(false);
       }
+      if (
+        searchDropdownRef.current &&
+        !searchDropdownRef.current.contains(event.target)
+      ) {
+        setIsSearchDropdownOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -35,28 +72,130 @@ const Navbar = () => {
     };
   }, []);
 
+  const fetchSearchItems = async (value) => {
+    if (!value.trim()) {
+      setSearchItems([]);
+      setIsSearchDropdownOpen(false);
+      return;
+    }
+    try {
+      const apiEndpoint = `${url}/Item/client/search?value=${encodeURIComponent(
+        value
+      )}&producer=${producer}&subject=${defaultSubject}`;
+      const response = await fetch(apiEndpoint);
+      if (!response.ok) throw new Error("Failed to fetch items");
+      const data = await response.json();
+
+      const searchLower = value.toLowerCase().trim();
+      console.log("Search term:", searchLower);
+      console.log("API endpoint:", apiEndpoint);
+      console.log("API response:", data);
+
+      const filteredItems = data.filter((item) => {
+        const barkodi = item.Barkodi?.toLowerCase() || "";
+        const shifra = item.Shifra?.toLowerCase() || "";
+        const emertimi = item.Emertimi?.toLowerCase() || "";
+        const prodhuesi = item.Prodhuesi?.toLowerCase() || "";
+        const extras = item.Extras?.toLowerCase() || "";
+
+        const extrasCodes = extras
+          .split(",")
+          .map((code) => code.replace(/\s+/g, "").trim());
+
+        console.log("Item:", {
+          barkodi,
+          shifra,
+          emertimi,
+          prodhuesi,
+          extras,
+          extrasCodes,
+        });
+
+        const matchesExtras = extrasCodes.some((code) =>
+          code.includes(searchLower)
+        );
+
+        return (
+          barkodi.includes(searchLower) ||
+          shifra.includes(searchLower) ||
+          emertimi.includes(searchLower) ||
+          prodhuesi.includes(searchLower) ||
+          matchesExtras
+        );
+      });
+
+      console.log("Filtered items:", filteredItems);
+      setSearchItems(filteredItems);
+      setIsSearchDropdownOpen(filteredItems.length > 0);
+    } catch (error) {
+      toast.error("Failed to fetch search results.");
+      console.error(error);
+    }
+  };
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchValue(value);
+    fetchSearchItems(value);
+  };
+
+  const handleItemSelect = (itemId) => {
+    setSearchValue("");
+    setSearchItems([]);
+    setIsSearchDropdownOpen(false);
+    navigate(`/itemsdetail/${itemId}`);
+  };
+
+  const handleSearchSubmit = (e) => {
+    if (e.key === "Enter" && searchValue.trim()) {
+      setSearchItems([]);
+      setIsSearchDropdownOpen(false);
+      navigate(`/items1?search=${encodeURIComponent(searchValue)}`);
+    }
+  };
+
   return (
-    <nav className="fixed w-full flex items-center justify-between z-[100] bg-[--secondary-color] px-[max (max(25px,2vw)] shadow-md">
+    <nav className="fixed w-full flex items-center justify-between z-[100] bg-[--secondary-color] px-[max(25px,2vw)] shadow-md">
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-10">
-          <Link
-            to="/"
-            className="text-[max(22px,1.5vw)] p-[max(6px,.5vw)] pr-10 cursor-pointer"
-          >
+          <Link to="/" className="p-[max(6px,.5vw)] pr-10 cursor-pointer">
             <img src={logo} className="w-full h-16" alt="Logo" />
           </Link>
-          <div className="flex justify-between ml-10">
-            <div className="flex justify-start items-start w-[400px] p-[max(6px,.5vw)]">
+          <div className="flex justify-between">
+            <div className="flex justify-start items-start w-[500px] p-[max(6px,.5vw)] relative">
               <div className="flex items-center relative w-full">
                 <input
                   type="text"
                   placeholder="Kodi OE / Pjesa nr. ose emrin / Barkodin"
+                  value={searchValue}
+                  onChange={handleSearchChange}
+                  onKeyDown={handleSearchSubmit}
                   className="w-full pl-5 pr-4 py-2 border rounded-lg shadow-sm outline-none"
                 />
                 <button className="absolute right-0 top-0 h-full px-4 rounded-r-lg flex items-center justify-center">
                   <CiSearch className="text-[max(13px,1vw)] transition-transform duration-200 ease-in-out hover:scale-110" />
                 </button>
               </div>
+              {isSearchDropdownOpen && searchItems.length > 0 && (
+                <div
+                  ref={searchDropdownRef}
+                  className="absolute top-full left-0 mt-2 w-full bg-white rounded-md shadow-lg py-1 z-10 max-h-60 overflow-y-auto"
+                >
+                  {searchItems.map((item) => (
+                    <div
+                      key={item.ID}
+                      onClick={() => handleItemSelect(item.ID)}
+                      className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer"
+                    >
+                      <div>{item.Emertimi}</div>
+                      <div className="text-xs text-gray-500">
+                        {item.Shifra} | {item.Barkodi} | {item.Prodhuesi}
+                        {item.Extras && ` | ${item.Extras}`}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="flex justify-start items-start w-[300px] p-[max(6px,.5vw)]">
               <div className="flex items-center relative w-full">

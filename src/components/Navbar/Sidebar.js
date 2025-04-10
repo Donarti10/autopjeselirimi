@@ -43,6 +43,11 @@ const Sidebar = ({ onToggle }) => {
       to: "/items",
       icon: <RiListCheck3 />,
     },
+    {
+      name: "Linjë Transporti",
+      to: "/transport",
+      icon: <TbTruckDelivery />,
+    },
   ];
 
   const commonItems = [
@@ -53,7 +58,7 @@ const Sidebar = ({ onToggle }) => {
     },
     {
       name: "Linjë Transporti",
-      to: "/transport",
+      to: "/transportclient",
       icon: <TbTruckDelivery />,
     },
   ];
@@ -70,46 +75,47 @@ const Sidebar = ({ onToggle }) => {
   return (
     <div
       className={`h-screen sticky top-0 bg-gray-50 border-r overflow-x-hidden
-        transition-all duration-300 ${
-          isCollapsed ? "w-16" : "w-80"
-        } flex-shrink-0`}
+        transition-all duration-300 flex flex-col justify-between
+        ${isCollapsed ? "w-16" : "w-72"} flex-shrink-0`}
     >
-      <ul className="pt-20">
-        {sidebarItems.map(({ name, to, icon }, idx) => (
-          <li key={idx}>
-            <Link
-              to={to}
-              className={`flex items-center gap-2 h-12 pl-4 border-b hover:bg-gray-100
-                transition-colors duration-200`}
-            >
-              <span className="text-lg">{icon}</span>
-              <span
-                className={`ml-2 transition-opacity duration-200 ${
-                  isCollapsed ? "opacity-0" : "opacity-100 whitespace-nowrap"
-                }`}
+      <div>
+        <ul className="pt-20">
+          {sidebarItems.map(({ name, to, icon }, idx) => (
+            <li key={idx}>
+              <Link
+                to={to}
+                className={`flex items-center gap-2 h-12 pl-4 border-b hover:bg-gray-100
+                  transition-colors duration-200`}
               >
-                {name}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>
+                <span className="text-lg">{icon}</span>
+                <span
+                  className={`ml-2 transition-opacity duration-200 ${
+                    isCollapsed ? "opacity-0" : "opacity-100 whitespace-nowrap"
+                  }`}
+                >
+                  {name}
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
 
-      <div
-        onClick={toggleSidebar}
-        className="p-4 flex items-center justify-end cursor-pointer hover:bg-gray-100"
-      >
-        {isCollapsed ? (
-          <LiaAngleDoubleRightSolid />
-        ) : (
-          <>
-            <LiaAngleDoubleLeftSolid />
-            <span className="ml-2">Mbyll</span>
-          </>
-        )}
+        <div
+          onClick={toggleSidebar}
+          className="p-4 flex items-center justify-end cursor-pointer hover:bg-gray-100"
+        >
+          {isCollapsed ? (
+            <LiaAngleDoubleRightSolid />
+          ) : (
+            <>
+              <LiaAngleDoubleLeftSolid />
+              <span className="ml-2">Mbyll</span>
+            </>
+          )}
+        </div>
       </div>
 
-      <div className="mt-auto p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200">
         {!isCollapsed && (
           <span className="block mb-2 text-gray-700">Distributori ynë</span>
         )}
