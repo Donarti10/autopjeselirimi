@@ -3,6 +3,7 @@ import { Breadcrumb, Table, Input, Select, Modal, Tooltip, Spin } from "antd";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import debounce from "lodash/debounce";
+import Loader from "../Loader/Loader";
 
 const { Option } = Select;
 
@@ -271,7 +272,7 @@ const Items = () => {
       <div className="">
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <Spin />
+            <Loader />
           </div>
         ) : (
           <Table
@@ -286,7 +287,7 @@ const Items = () => {
       <div>
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <Spin />
+            <Loader />
           </div>
         ) : (
           barcodeItems.length > 0 && (

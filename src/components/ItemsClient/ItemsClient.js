@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Breadcrumb, Input, Select, Modal, Tooltip, Spin } from "antd";
-import { Link } from "react-router-dom";
+import { Breadcrumb, Input, Select, Modal } from "antd";
+import { Link, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import debounce from "lodash/debounce";
 import {
@@ -10,28 +10,51 @@ import {
   FaPlus,
   FaShoppingCart,
 } from "react-icons/fa";
+import Loader from "../Loader/Loader";
+import { HiMinus, HiMiniPlus } from "react-icons/hi2";
+import { IoIosArrowForward } from "react-icons/io";
 
 const { Option } = Select;
 
 const ItemsClient = () => {
   const url = process.env.REACT_APP_API_URL;
   const [items, setItems] = useState([]);
-  const [barcodeItems, setBarcodeItems] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const location = useLocation();
   const [value, setValue] = useState("");
   const [producers, setProducers] = useState([]);
   const [producerID, setProducerID] = useState(null);
   const [loadingProducer, setLoadingProducer] = useState(false);
-
   const [subjects, setSubjects] = useState([]);
   const [subjectID, setSubjectID] = useState(null);
   const [loadingSubject, setLoadingSubject] = useState(false);
-
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const user = localStorage.getItem("user");
-  const subject = JSON.parse(user);
+  const subject = user ? JSON.parse(user) : null;
+  const [quantities, setQuantities] = useState({});
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchQuery = params.get("search");
+    if (searchQuery) {
+      setValue(decodeURIComponent(searchQuery));
+    }
+  }, [location.search]);
+
+  const handleIncrement = (itemId) => {
+    setQuantities((prev) => ({
+      ...prev,
+      [itemId]: (prev[itemId] || 1) + 1,
+    }));
+  };
+
+  const handleDecrement = (itemId) => {
+    setQuantities((prev) => ({
+      ...prev,
+      [itemId]: Math.max((prev[itemId] || 1) - 1, 1),
+    }));
+  };
 
   const debouncedOpenModal = debounce((photo) => {
     setSelectedPhoto(`data:image/jpeg;base64,${photo}`);
@@ -83,36 +106,15 @@ const ItemsClient = () => {
       const prod = producerID || 0;
       const subj = subject || 0;
       const res = await fetch(
-        `${url}/Item/client/search?value=${q}&producer=${prod}&subject=${subj}`
+        `${url}/Item/client/search?value=${encodeURIComponent(
+          q
+        )}&producer=${prod}&subject=${subj}`
       );
       if (!res.ok) throw new Error(res.statusText);
       const data = await res.json();
       setItems(data);
-      if (data.length === 1 && data[0].Barkodi) {
-        fetchItemsByBarcode(data[0].Barkodi);
-      } else {
-        setBarcodeItems([]);
-      }
     } catch (err) {
       toast.error("Failed to load items.");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchItemsByBarcode = async (barcode) => {
-    setLoading(true);
-    try {
-      const prod = producerID || 0;
-      const subj = subjectID || 0;
-      const res = await fetch(
-        `${url}/Item/admin/search?value=${barcode}&producer=${prod}&subject=${subj}`
-      );
-      if (!res.ok) throw new Error(res.statusText);
-      setBarcodeItems(await res.json());
-    } catch (err) {
-      toast.error("Failed to load barcode items.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -127,7 +129,9 @@ const ItemsClient = () => {
     const s = value.toLowerCase();
     return (
       it.Emertimi?.toLowerCase().includes(s) ||
-      it.Extras?.toLowerCase().includes(s)
+      it.Extras?.toLowerCase().includes(s) ||
+      it.Barkodi?.toLowerCase().includes(s) ||
+      it.Shifra?.toLowerCase().includes(s)
     );
   });
 
@@ -175,7 +179,7 @@ const ItemsClient = () => {
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <Spin size="large" />
+          <Loader />
         </div>
       ) : (
         <>
@@ -186,12 +190,12 @@ const ItemsClient = () => {
                   key={item.ID}
                   className="border border-gray-200 rounded-lg overflow-hidden flex bg-white"
                 >
-                  <div className="w-1/4 h-40 bg-gray-100 flex-shrink-0 relative m-auto">
+                  <div className="w-1/4 h-48 bg-gray-100 flex-shrink-0 relative m-auto">
                     {item.Photo ? (
                       <img
                         src={`data:image/jpeg;base64,${item.Photo}`}
                         alt={item.Emertimi}
-                        className="object-cover w-full h-full cursor-pointer"
+                        className="object-fill w-full h-full cursor-pointer"
                         onClick={() => debouncedOpenModal(item.Photo)}
                       />
                     ) : (
@@ -210,11 +214,9 @@ const ItemsClient = () => {
                         {item.Shifra}
                       </Link>
                     </div>
-                    <h2 className="font-semibold text-lg leading-snug">
-                      {item.Emertimi}
-                    </h2>
+                    <h2 className="font-semibold text-lg">{item.Emertimi}</h2>
                     {item.Extras && (
-                      <p className="text-gray-500 text-sm mt-1 break-words w-full">
+                      <p className="text-gray-500 text-sm mt-1 break-words w-[70%]">
                         {item.Extras}
                       </p>
                     )}
@@ -222,39 +224,61 @@ const ItemsClient = () => {
                       Kodi: <span className="font-medium">{item.Shifra}</span>
                     </p>
                     <p className="text-gray-600 text-sm">
+                      Barkodi:{" "}
+                      <span className="font-medium">{item.Barkodi}</span>
+                    </p>
+                    <p className="text-gray-600 text-sm">
                       Prodhuesi:{" "}
                       <span className="font-medium">{item.Prodhuesi}</span>
                     </p>
                     <div className="mt-4 text-sm text-blue-600 flex justify-between space-x-4">
                       <Link
-                        to={`/items/${item.ID}/replacements`}
-                        className="hover:underline whitespace-nowrap"
+                        to={`/itemsdetail/${item.ID}?tab=pershkrim`}
+                        className="hover:underline whitespace-nowrap flex items-center text-base"
                       >
-                        ZËVENDËSIMET &rsaquo;
+                        Përshkrimi
+                        <div>
+                          <IoIosArrowForward />
+                        </div>
                       </Link>
                       <Link
-                        to={`/items/${item.ID}/tecdoc`}
-                        className="hover:underline whitespace-nowrap"
+                        to={`/itemsdetail/${item.ID}?tab=detaje`}
+                        className="hover:underline whitespace-nowrap flex items-center text-base"
                       >
-                        ZËVENDËSIMET TECDOC &rsaquo;
+                        Detajet
+                        <div>
+                          <IoIosArrowForward />
+                        </div>
                       </Link>
                       <Link
-                        to={`/items/${item.ID}/more`}
-                        className="hover:underline whitespace-nowrap"
+                        to={`/itemsdetail/${item.ID}?tab=zevendesimet`}
+                        className="hover:underline whitespace-nowrap flex items-center text-base"
                       >
-                        MË SHUMË INFORMACION &rsaquo;
+                        Zëvendësimet
+                        <div>
+                          <IoIosArrowForward />
+                        </div>
                       </Link>
                     </div>
                   </div>
 
                   <div className="w-1/4 p-4 flex flex-col justify-between">
                     <div className="flex items-center space-x-2 mb-4">
-                      <button className="border rounded p-1">
-                        <FaMinus />
+                      <button
+                        onClick={() => handleDecrement(item.ID)}
+                        disabled={(quantities[item.ID] || 1) <= 1}
+                        className="border rounded p-1 disabled:opacity-50"
+                      >
+                        <HiMinus className="text-lg font-medium" />
                       </button>
-                      <span className="font-medium">1</span>
-                      <button className="border rounded p-1">
-                        <FaPlus />
+                      <span className="font-medium w-8 text-center">
+                        {quantities[item.ID] || 1}
+                      </span>
+                      <button
+                        onClick={() => handleIncrement(item.ID)}
+                        className="border rounded p-1"
+                      >
+                        <HiMiniPlus className="text-lg font-medium" />
                       </button>
                       <button className="flex items-center w-full justify-center bg-red-500 hover:bg-red-600 text-white py-2 rounded">
                         <FaShoppingCart className="mr-2" />

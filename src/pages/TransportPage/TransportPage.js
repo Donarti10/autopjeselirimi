@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import Navbar from "../../components/Navbar/Navbar";
 import Sidebar from "../../components/Navbar/Sidebar";
-import Items from "../../components/Items/Items";
+import TransportClient from "../../components/TransportClient/TransportClient";
 
-const ItemsPage = () => {
+const TransportPage = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const handleSidebarToggle = (collapsed) => {
@@ -28,11 +28,11 @@ const ItemsPage = () => {
             isSidebarCollapsed ? "w-[calc(100%-4rem)]" : "w-[calc(100%-20%)]"
           }`}
         >
-          <Items />
+          <TransportClient />
         </main>
       </div>
     </div>
   );
 };
 
-export default ItemsPage;
+export default TransportPage;
