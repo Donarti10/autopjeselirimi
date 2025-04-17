@@ -82,7 +82,7 @@ const Items = () => {
       const data = await response.json();
       setBarcodeItems(data);
     } catch (error) {
-      toast.error("Failed to fetch barcode items.");
+      toast.error("Marrja e artikujve të barkodit dështoi.");
       console.error("Fetch error:", error);
     } finally {
       setLoading(false);

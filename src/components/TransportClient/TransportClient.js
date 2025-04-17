@@ -18,7 +18,7 @@ const TransportClient = () => {
       if (!res.ok) throw new Error(res.statusText);
       setData(await res.json());
     } catch (err) {
-      toast.error("Failed to fetch transport relations.");
+      toast.error("Marrja e linjave të transportit dështoi.");
       console.error(err);
     } finally {
       setLoading(false);

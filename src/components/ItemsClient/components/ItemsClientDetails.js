@@ -209,7 +209,7 @@ const ItemsClientDetailsPage = () => {
                         Përshkrimi
                       </Tab>
                       <Tab className="px-6 py-2 text-gray-600 cursor-pointer border-b-2 border-transparent hover:text-blue-600 focus:outline-none">
-                        Detaje
+                        Detajet
                       </Tab>
                       <Tab className="px-6 py-2 text-gray-600 cursor-pointer border-b-2 border-transparent hover:text-blue-600 focus:outline-none">
                         Zëvendësimet
