@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useLocation } from "react-router-dom"; // Added useLocation
+import { useParams, useLocation, useNavigate } from "react-router-dom"; // Added useNavigate
 import toast from "react-hot-toast";
 import { Spin } from "antd";
 import { MdFavoriteBorder } from "react-icons/md";
@@ -11,13 +11,14 @@ import Sidebar from "../../Navbar/Sidebar";
 const ItemsClientDetailsPage = () => {
   const url = process.env.REACT_APP_API_URL;
   const { id } = useParams();
-  const location = useLocation(); // To read query parameters
+  const location = useLocation();
+  const navigate = useNavigate(); // Initialize useNavigate
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [barcodeItems, setBarcodeItems] = useState([]);
   const [barcodeLoading, setBarcodeLoading] = useState(false);
-  const [selectedTabIndex, setSelectedTabIndex] = useState(0); // To control active tab
+  const [selectedTabIndex, setSelectedTabIndex] = useState(0);
 
   const user = localStorage.getItem("user");
   const subject = user ? JSON.parse(user) : null;
@@ -33,7 +34,7 @@ const ItemsClientDetailsPage = () => {
     if (tab === "pershkrim") setSelectedTabIndex(0);
     else if (tab === "detaje") setSelectedTabIndex(1);
     else if (tab === "zevendesimet") setSelectedTabIndex(2);
-    else setSelectedTabIndex(0); // Default to "Përshkrim" if no tab is specified
+    else setSelectedTabIndex(0);
   }, [location.search]);
 
   useEffect(() => {
@@ -98,6 +99,11 @@ const ItemsClientDetailsPage = () => {
     }
   }, [item, url, subject]);
 
+  // Handle navigation to replacement item detail page
+  const handleReplacementClick = (replacementId) => {
+    navigate(`/itemsdetail/${replacementId}?tab=pershkrim`);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-20">
@@ -132,7 +138,7 @@ const ItemsClientDetailsPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="flex flex-col items-center">
                 <div className="relative w-72 h-96">
-                  <div className="absolute bottom-[-20px] left-[10%] w-[80%] h-6 bg-gray-300 rounded-full blur-md opacity-50"></div>
+                  <div className="absolute bottom-[-20px] left-[10%] w-[80%] h-6"></div>
                   {item.Photo ? (
                     <img
                       className="relative w-full h-full object-contain z-10"
@@ -295,7 +301,10 @@ const ItemsClientDetailsPage = () => {
                           {barcodeItems.map((replacement) => (
                             <div
                               key={replacement.ID}
-                              className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow"
+                              className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                              onClick={() =>
+                                handleReplacementClick(replacement.ID)
+                              }
                             >
                               <div className="flex items-start space-x-4">
                                 <div className="w-24 h-24 flex-shrink-0">

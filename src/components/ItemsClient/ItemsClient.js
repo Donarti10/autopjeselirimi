@@ -188,14 +188,14 @@ const ItemsClient = () => {
               {filteredItems.map((item) => (
                 <div
                   key={item.ID}
-                  className="border border-gray-200 rounded-lg overflow-hidden flex bg-white"
+                  className="border border-gray-200 rounded-lg overflow-hidden flex bg-white max-w-full"
                 >
-                  <div className="w-1/4 h-48 bg-gray-100 flex-shrink-0 relative m-auto">
+                  <div className="w-1/4 h-48 bg-gray-100 flex-shrink-0 relative">
                     {item.Photo ? (
                       <img
                         src={`data:image/jpeg;base64,${item.Photo}`}
                         alt={item.Emertimi}
-                        className="object-fill w-full h-full cursor-pointer"
+                        className="object-contain w-full h-full cursor-pointer"
                         onClick={() => debouncedOpenModal(item.Photo)}
                       />
                     ) : (
@@ -205,64 +205,60 @@ const ItemsClient = () => {
                     )}
                   </div>
 
-                  <div className="px-4 py-3 flex-1">
+                  <div className="px-4 py-3 flex-1 flex flex-col min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
                       <Link
                         to={`/itemsdetail/${item.ID}`}
-                        className="text-blue-600 font-medium hover:underline"
+                        className="text-blue-600 font-medium hover:underline truncate"
                       >
                         {item.Shifra}
                       </Link>
                     </div>
-                    <h2 className="font-semibold text-lg">{item.Emertimi}</h2>
+                    <h2 className="font-semibold text-lg truncate">
+                      {item.Emertimi}
+                    </h2>
                     {item.Extras && (
-                      <p className="text-gray-500 text-sm mt-1 break-words w-[70%]">
+                      <p className="text-gray-500 text-sm mt-1 line-clamp-2">
                         {item.Extras}
                       </p>
                     )}
-                    <p className="text-gray-600 text-sm mt-2">
+                    <p className="text-gray-600 text-sm mt-2 truncate">
                       Kodi: <span className="font-medium">{item.Shifra}</span>
                     </p>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-gray-600 text-sm truncate">
                       Barkodi:{" "}
                       <span className="font-medium">{item.Barkodi}</span>
                     </p>
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-gray-600 text-sm truncate">
                       Prodhuesi:{" "}
                       <span className="font-medium">{item.Prodhuesi}</span>
                     </p>
-                    <div className="mt-4 text-sm text-blue-600 flex justify-between space-x-4">
+                    <div className="mt-4 text-sm text-blue-600 flex justify-between space-x-2 flex-wrap">
                       <Link
                         to={`/itemsdetail/${item.ID}?tab=pershkrim`}
-                        className="hover:underline whitespace-nowrap flex items-center text-base"
+                        className="hover:underline whitespace-nowrap flex items-center text-base truncate"
                       >
                         Përshkrimi
-                        <div>
-                          <IoIosArrowForward />
-                        </div>
+                        <IoIosArrowForward className="ml-1" />
                       </Link>
                       <Link
                         to={`/itemsdetail/${item.ID}?tab=detaje`}
-                        className="hover:underline whitespace-nowrap flex items-center text-base"
+                        className="hover:underline whitespace-nowrap flex items-center text-base truncate"
                       >
                         Detajet
-                        <div>
-                          <IoIosArrowForward />
-                        </div>
+                        <IoIosArrowForward className="ml-1" />
                       </Link>
                       <Link
                         to={`/itemsdetail/${item.ID}?tab=zevendesimet`}
-                        className="hover:underline whitespace-nowrap flex items-center text-base"
+                        className="hover:underline whitespace-nowrap flex items-center text-base truncate"
                       >
                         Zëvendësimet
-                        <div>
-                          <IoIosArrowForward />
-                        </div>
+                        <IoIosArrowForward className="ml-1" />
                       </Link>
                     </div>
                   </div>
 
-                  <div className="w-1/4 p-4 flex flex-col justify-between">
+                  <div className="w-1/4 p-4 flex flex-col justify-between min-w-[200px]">
                     <div className="flex items-center space-x-2 mb-4">
                       <button
                         onClick={() => handleDecrement(item.ID)}
