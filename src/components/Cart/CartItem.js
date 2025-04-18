@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { MinusIcon, PlusIcon, TrashIcon } from "lucide-react";
-import noPhoto from "./assets/no-image-icon-6.png";
+// import noPhoto from "./assets/no-image-icon-6.png";
+import noPhoto from "../../assets/no-image-icon-6.png";
 
 export const CartItem = ({ item }) => {
   const [quantity, setQuantity] = useState(item.quantity);
