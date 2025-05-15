@@ -2,13 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Spin } from "antd";
-import { MdFavoriteBorder } from "react-icons/md";
 import { Tabs, TabList, Tab, TabPanel } from "react-tabs";
 import "react-tabs/style/react-tabs.css";
 import Navbar from "../../Navbar/Navbar";
 import Sidebar from "../../Navbar/Sidebar";
 
-const ItemsClientDetailsPage = () => {
+const ItemsClientDetails = () => {
   const url = process.env.REACT_APP_API_URL;
   const { id } = useParams();
   const location = useLocation();
@@ -19,6 +18,7 @@ const ItemsClientDetailsPage = () => {
   const [barcodeItems, setBarcodeItems] = useState([]);
   const [barcodeLoading, setBarcodeLoading] = useState(false);
   const [selectedTabIndex, setSelectedTabIndex] = useState(0);
+  const [quantity, setQuantity] = useState(1);
 
   const user = localStorage.getItem("user");
   const subject = user ? JSON.parse(user) : null;
@@ -27,7 +27,6 @@ const ItemsClientDetailsPage = () => {
     setIsSidebarCollapsed(collapsed);
   };
 
-  // Set the active tab based on the query parameter
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const tab = params.get("tab");
@@ -41,16 +40,19 @@ const ItemsClientDetailsPage = () => {
     const fetchItemById = async () => {
       try {
         setLoading(true);
+        if (!subject) {
+          throw new Error("No user logged in");
+        }
         const response = await fetch(
           `${url}/Item/client/id?id=${id}&subject=${subject}`
         );
         if (!response.ok) {
-          throw new Error(response.statusText);
+          throw new Error(`Failed to fetch item: ${response.statusText}`);
         }
         const data = await response.json();
         setItem(data);
       } catch (error) {
-        toast.error("Failed to load item details.");
+        toast.error("Dështoi ngarkimi i detajeve të artikullit.");
         console.error("Error fetching item details:", error);
       } finally {
         setLoading(false);
@@ -68,10 +70,35 @@ const ItemsClientDetailsPage = () => {
 
       setBarcodeLoading(true);
       try {
+        let producerID = 0;
+        if (item.Prodhuesi) {
+          const producerResponse = await fetch(
+            `${url}/Producer/search?value=${encodeURIComponent(
+              item.Prodhuesi
+            )}`,
+            {
+              headers: { Accept: "*/*" },
+            }
+          );
+          if (!producerResponse.ok) {
+            console.warn(
+              `Failed to fetch producer: ${producerResponse.status}`
+            );
+          } else {
+            const producers = await producerResponse.json();
+            const matchingProducer = producers.find(
+              (p) => p.Emertimi.toLowerCase() === item.Prodhuesi.toLowerCase()
+            );
+            if (matchingProducer) {
+              producerID = matchingProducer["$ID"];
+            }
+          }
+        }
+
         const response = await fetch(
           `${url}/Item/client/search?value=${encodeURIComponent(
             item.Barkodi
-          )}&producer=0&subject=${subject}`
+          )}&producer=${producerID}&subject=${subject}`
         );
 
         if (!response.ok) {
@@ -82,12 +109,8 @@ const ItemsClientDetailsPage = () => {
         const replacementItems = data.filter((i) => i.ID !== item.ID);
 
         setBarcodeItems(replacementItems);
-
-        if (replacementItems.length === 0) {
-          toast.error("No suitable replacements found for this item.");
-        }
       } catch (error) {
-        toast.error("Failed to fetch replacement items.");
+        toast.error("Dështoi ngarkimi i artikujve zëvendësues.");
         console.error("Error fetching replacement items:", error);
       } finally {
         setBarcodeLoading(false);
@@ -101,6 +124,71 @@ const ItemsClientDetailsPage = () => {
 
   const handleReplacementClick = (replacementId) => {
     navigate(`/itemsdetail/${replacementId}?tab=pershkrim`);
+  };
+
+  const handleAddToCart = async () => {
+    if (!subject) {
+      toast.error(
+        "Ju lutemi të identifikoheni për të shtuar artikuj në shportë."
+      );
+      return;
+    }
+
+    if (!item || item.SasiaStoku <= 0) {
+      toast.error("Artikulli është jashtë stokut.");
+      return;
+    }
+
+    if (quantity > item.SasiaStoku) {
+      toast.error(
+        `Sasia e zgjedhur tejkalon stokun e disponueshëm (${item.SasiaStoku}).`
+      );
+      return;
+    }
+
+    try {
+      const response = await fetch(`${url}/Cart`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "*/*",
+        },
+        body: JSON.stringify({
+          id: 0,
+          subjectIdentify: parseInt(subject),
+          subjectName: item.Emertimi || "Cart Item",
+          note: `Shtuar artikulli ${item.Emertimi} (ID: ${id})`,
+          createdByID: parseInt(subject),
+          details: [
+            {
+              itemIdentify: parseInt(id),
+              quantity: quantity,
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Dështoi shtimi në shportë: ${response.status} - ${errorText}`
+        );
+      }
+
+      toast.success("Artikulli u shtua në shportë me sukses!");
+      navigate("/cart");
+    } catch (error) {
+      toast.error("Dështoi shtimi i artikullit në shportë: " + error.message);
+      console.error("Gabim gjatë shtimit në shportë:", error);
+    }
+  };
+
+  const handleIncrement = () => {
+    setQuantity((prev) => prev + 1);
+  };
+
+  const handleDecrement = () => {
+    setQuantity((prev) => Math.max(prev - 1, 1));
   };
 
   if (loading) {
@@ -158,10 +246,10 @@ const ItemsClientDetailsPage = () => {
                 </p>
                 <div className="flex items-center py-7 space-x-3 mb-4">
                   <span className="text-3xl font-semibold text-black">
-                    ${item.Cmimi}
+                    {item.Cmimi} €
                   </span>
                   <span className="text-gray-400 text-sm">
-                    Net: ${item["Cmimi pa tvsh"].toFixed(2)}
+                    Net: {item["Cmimi pa tvsh"].toFixed(2)} €
                   </span>
                   <span
                     className={`text-sm px-2 rounded-full ${
@@ -180,20 +268,31 @@ const ItemsClientDetailsPage = () => {
                 </div>
                 <div className="flex items-center mb-6">
                   <div className="flex items-center">
-                    <button className="w-10 h-10 border border-gray-300 rounded-l flex justify-center items-center text-xl">
+                    <button
+                      onClick={handleDecrement}
+                      className="w-10 h-10 border border-gray-300 rounded-l flex justify-center items-center text-xl"
+                      disabled={quantity <= 1}
+                    >
                       -
                     </button>
                     <input
                       type="text"
                       className="w-16 h-10 text-center border-t border-b border-gray-300"
-                      value="1"
+                      value={quantity}
                       readOnly
                     />
-                    <button className="w-10 h-10 border border-gray-300 rounded-r flex justify-center items-center text-xl">
+                    <button
+                      onClick={handleIncrement}
+                      className="w-10 h-10 border border-gray-300 rounded-r flex justify-center items-center text-xl"
+                    >
                       +
                     </button>
                   </div>
-                  <button className="ml-4 w-[50%] bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors">
+                  <button
+                    onClick={handleAddToCart}
+                    className="ml-4 w-[50%] bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
+                    disabled={item.SasiaStoku <= 0}
+                  >
                     Shto në Shportë
                   </button>
                 </div>
@@ -219,7 +318,7 @@ const ItemsClientDetailsPage = () => {
                       <ul className="list-disc list-inside mt-2 text-gray-600">
                         <li>Emërtimi: {item.Emertimi}</li>
                         <li>Prodhuesi: {item.Prodhuesi}</li>
-                        <li>Çmimi me TVSH: ${item.Cmimi}</li>
+                        <li>Çmimi me TVSH: {item.Cmimi} €</li>
                         <li>
                           Disponueshmëria:{" "}
                           {item.SasiaStoku > 0 ? "Në stok" : "Pa stok"}
@@ -229,7 +328,7 @@ const ItemsClientDetailsPage = () => {
                       </ul>
                     </TabPanel>
                     <TabPanel className="mt-4">
-                      <h2 className="text-lg font-bold mb-2">Detaje</h2>
+                      <h2 className="text-lg font-bold mb-2">Detajet</h2>
                       <table className="w-full border border-gray-300 text-sm text-left">
                         <tbody>
                           <tr className="border-b">
@@ -254,14 +353,14 @@ const ItemsClientDetailsPage = () => {
                             <td className="py-2 px-4 font-semibold">
                               Çmimi me TVSH
                             </td>
-                            <td className="py-2 px-4">${item.Cmimi}</td>
+                            <td className="py-2 px-4">{item.Cmimi} €</td>
                           </tr>
                           <tr className="border-b">
                             <td className="py-2 px-4 font-semibold">
                               Çmimi pa TVSH
                             </td>
                             <td className="py-2 px-4">
-                              ${item["Cmimi pa tvsh"].toFixed(2)}
+                              {item["Cmimi pa tvsh"].toFixed(2)} €
                             </td>
                           </tr>
                           <tr className="border-b">
@@ -290,9 +389,9 @@ const ItemsClientDetailsPage = () => {
                       </table>
                     </TabPanel>
                     <TabPanel className="mt-4">
-                      <h2 className="text-lg font-bold mb-2">Përshkrim</h2>
+                      <h2 className="text-lg font-bold mb-2">OEM Code</h2>
                       <ul className="list-disc list-inside mt-2 text-gray-600">
-                        <li>{item.Shifra}</li>
+                        <li>{item.Extras || "Pa kod OEM"}</li>
                       </ul>
                     </TabPanel>
                   </Tabs>
@@ -343,7 +442,7 @@ const ItemsClientDetailsPage = () => {
                         </p>
                         <div className="mt-2 flex items-center space-x-2">
                           <span className="text-lg font-semibold text-black">
-                            ${replacement.Cmimi}
+                            {replacement.Cmimi} €
                           </span>
                           <span
                             className={`text-xs px-2 py-1 rounded-full ${
@@ -375,4 +474,4 @@ const ItemsClientDetailsPage = () => {
   );
 };
 
-export default ItemsClientDetailsPage;
+export default ItemsClientDetails;

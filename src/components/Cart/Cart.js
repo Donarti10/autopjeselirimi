@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { CartItem } from "./CartItem";
 import { CartSummary } from "./CartSummary";
 import { Button } from "antd";
@@ -12,9 +12,12 @@ export const Cart = () => {
   useEffect(() => {
     const fetchCartData = async () => {
       try {
-        const response = await fetch(`${url}/Cart/id?id=1`);
+        const user = JSON.parse(localStorage.getItem("user"));
+        const subjectID = parseInt(user);
+        const response = await fetch(`${url}/Cart/subject?id=${subjectID}`);
         const data = await response.json();
-        setCartData(data.cart);
+        // Assuming the API returns an array; take the first cart or adjust as needed
+        setCartData(data[0] || { details: [], totals: {} });
         setLoading(false);
       } catch (error) {
         console.error("Error fetching cart data:", error);
@@ -23,7 +26,7 @@ export const Cart = () => {
     };
 
     fetchCartData();
-  }, []);
+  }, [url]);
 
   if (loading) {
     return <div>Duke ngarkuar...</div>;
@@ -34,18 +37,20 @@ export const Cart = () => {
   }
 
   const cartItems = cartData.details.map((item) => ({
-    id: item.id,
-    name: item.name,
-    partNumber: item.number,
-    price: item.price,
-    quantity: item.quantity,
-    image: "https://via.placeholder.com/200",
+    id: item.itemIdentify,
+    name: item.name || "Unknown Item",
+    partNumber: item.number || "N/A",
+    price: item.price || 0,
+    quantity: item.quantity || 1,
+    image: item.photo
+      ? `data:image/jpeg;base64,${item.photo}`
+      : "https://via.placeholder.com/200",
   }));
 
-  const subtotal = cartData.totals.totalWithoutDiscount;
-  const shipping = cartData.totals.totalDiscount;
-  const tax = cartData.totals.totalItems;
-  const total = cartData.totals.totalWithDiscount;
+  const subtotal = cartData.totals.totalWithoutDiscount || 0;
+  const shipping = cartData.totals.totalDiscount || 0;
+  const tax = cartData.totals.totalItems || 0;
+  const total = cartData.totals.totalWithDiscount || 0;
 
   return (
     <div className="w-full p-2">
@@ -92,3 +97,5 @@ export const Cart = () => {
     </div>
   );
 };
+
+export default Cart;
