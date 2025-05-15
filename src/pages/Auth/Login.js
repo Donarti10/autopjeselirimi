@@ -8,6 +8,7 @@ export function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [key, setKey] = useState(null);
+  const [obfuscatedKey, setObfuscatedKey] = useState(null);
   const [latitude, setLatitude] = useState(null);
   const [longitude, setLongitude] = useState(null);
   const [rememberMe, setRememberMe] = useState(false);
@@ -20,18 +21,20 @@ export function LoginPage() {
 
   const generateFingerprint = async () => {
     try {
-      if (key) {
-        return key;
-      }
+      if (key) return key;
+
       const fingerprint = await getFingerprint();
+
+      const encoded = btoa(fingerprint).split("").reverse().join("");
+      setObfuscatedKey(encoded);
       setKey(fingerprint);
       return fingerprint;
-    } catch (error) {
-      console.error("Error generating fingerprint:", error);
-      setErrorMessage("Failed to generate device fingerprint");
+    } catch (err) {
+      setErrorMessage("Failed to generate fingerprint");
       return null;
     }
   };
+
   const getLocation = () => {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
@@ -91,8 +94,8 @@ export function LoginPage() {
       const payload = {
         id: 0,
         key: key,
-        latitude: latitude,
-        longitude: longitude,
+        latitude,
+        longitude,
       };
 
       const response = await fetch(`${url}/User/send-key`, {
@@ -114,6 +117,7 @@ export function LoginPage() {
       setSendKeyLoading(false);
     }
   };
+
   const handleLogIn = async (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -135,11 +139,7 @@ export function LoginPage() {
       const data = await response.json();
 
       if (!data.isAuthenticated) {
-        if (data.message === "Celsi i konfigurimit nuk perputhet!") {
-          setErrorMessage(data?.message);
-        } else {
-          setErrorMessage(data.message || "Invalid credentials");
-        }
+        setErrorMessage(data?.message || "Invalid credentials");
         setLoading(false);
         return;
       }
@@ -168,12 +168,14 @@ export function LoginPage() {
             </h1>
             <p className="text-gray-600">Login to access your account</p>
           </div>
+
           {errorMessage && (
             <div className="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg flex items-center mb-6">
               <AlertCircleIcon size={20} className="mr-2" />
               <span>{errorMessage}</span>
             </div>
           )}
+
           {sendKeyMessage && (
             <div
               className={`border px-4 py-3 rounded-lg flex items-center mb-6 ${
@@ -186,6 +188,7 @@ export function LoginPage() {
               <span>{sendKeyMessage}</span>
             </div>
           )}
+
           <form onSubmit={handleLogIn} noValidate>
             <div className="mb-6">
               <label
@@ -209,6 +212,7 @@ export function LoginPage() {
                 />
               </div>
             </div>
+
             <div className="mb-6">
               <label
                 htmlFor="password"
@@ -231,6 +235,7 @@ export function LoginPage() {
                 />
               </div>
             </div>
+
             <div className="mb-6">
               <button
                 type="button"
@@ -267,6 +272,7 @@ export function LoginPage() {
                 )}
               </button>
             </div>
+
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
                 <input
@@ -292,6 +298,7 @@ export function LoginPage() {
                 </a>
               </div>
             </div>
+
             <button
               type="submit"
               disabled={loading || !key}
@@ -302,6 +309,7 @@ export function LoginPage() {
           </form>
         </div>
       </div>
+
       <div
         className="hidden lg:block lg:w-1/2 bg-cover bg-center"
         style={{
