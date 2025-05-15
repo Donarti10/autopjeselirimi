@@ -1,15 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { Breadcrumb, Input, Select, Modal } from "antd";
+import React, { useEffect, useState, useRef } from "react";
+import { Breadcrumb, Input, Select, Modal, Pagination } from "antd";
 import { Link, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import debounce from "lodash/debounce";
-import {
-  FaStar,
-  FaBalanceScale,
-  FaMinus,
-  FaPlus,
-  FaShoppingCart,
-} from "react-icons/fa";
+import { FaShoppingCart } from "react-icons/fa";
 import Loader from "../Loader/Loader";
 import { HiMinus, HiMiniPlus } from "react-icons/hi2";
 import { IoIosArrowForward } from "react-icons/io";
@@ -33,6 +27,9 @@ const ItemsClient = () => {
   const user = localStorage.getItem("user");
   const subject = user ? JSON.parse(user) : null;
   const [quantities, setQuantities] = useState({});
+  const latestSearchRef = useRef("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -99,10 +96,10 @@ const ItemsClient = () => {
     fetchSubjects();
   }, [url]);
 
-  const fetchItems = async () => {
+  const fetchItems = async (searchValue) => {
     setLoading(true);
     try {
-      const q = value.trim() || " ";
+      const q = searchValue.trim();
       const prod = producerID || 0;
       const subj = subject || 0;
       const res = await fetch(
@@ -112,7 +109,10 @@ const ItemsClient = () => {
       );
       if (!res.ok) throw new Error(res.statusText);
       const data = await res.json();
-      setItems(data);
+      if (searchValue === latestSearchRef.current) {
+        setItems(data);
+        setCurrentPage(1);
+      }
     } catch (err) {
       toast.error("Failed to load items.");
       console.error(err);
@@ -121,8 +121,14 @@ const ItemsClient = () => {
     }
   };
 
+  const debouncedFetchItems = debounce((searchValue) => {
+    latestSearchRef.current = searchValue;
+    fetchItems(searchValue);
+  }, 300);
+
   useEffect(() => {
-    fetchItems();
+    debouncedFetchItems(value);
+    return () => debouncedFetchItems.cancel();
   }, [value, producerID, subjectID]);
 
   const filteredItems = items?.filter((it) => {
@@ -134,6 +140,9 @@ const ItemsClient = () => {
       it.Shifra?.toLowerCase().includes(s)
     );
   });
+
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedItems = filteredItems.slice(startIndex, startIndex + pageSize);
 
   const breadcrumbItems = [
     { title: <Link to="/">Faqja Kryesore</Link> },
@@ -184,113 +193,124 @@ const ItemsClient = () => {
       ) : (
         <>
           {filteredItems.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6">
-              {filteredItems.map((item) => (
-                <div
-                  key={item.ID}
-                  className="border border-gray-200 rounded-lg overflow-hidden flex bg-white max-w-full"
-                >
-                  <div className="w-1/4 h-48 bg-gray-100 flex-shrink-0 relative">
-                    {item.Photo ? (
-                      <img
-                        src={`data:image/jpeg;base64,${item.Photo}`}
-                        alt={item.Emertimi}
-                        className="object-contain w-full h-full cursor-pointer"
-                        onClick={() => debouncedOpenModal(item.Photo)}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400">
-                        Nuk ka Imazh
+            <div>
+              <div className="grid grid-cols-1 gap-6">
+                {paginatedItems.map((item) => (
+                  <div
+                    key={item.ID}
+                    className="border border-gray-200 rounded-lg overflow-hidden flex bg-white max-w-full"
+                  >
+                    <div className="w-1/4 h-48 bg-gray-100 flex-shrink-0 relative">
+                      {item.Photo ? (
+                        <img
+                          src={`data:image/jpeg;base64,${item.Photo}`}
+                          alt={item.Emertimi}
+                          className="object-contain w-full h-full cursor-pointer"
+                          onClick={() => debouncedOpenModal(item.Photo)}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          Nuk ka Imazh
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="px-4 py-3 flex-1 flex flex-col min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <Link
+                          to={`/itemsdetail/${item.ID}`}
+                          className="text-blue-600 font-medium hover:underline truncate"
+                        >
+                          {item.Shifra}
+                        </Link>
                       </div>
-                    )}
-                  </div>
-
-                  <div className="px-4 py-3 flex-1 flex flex-col min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Link
-                        to={`/itemsdetail/${item.ID}`}
-                        className="text-blue-600 font-medium hover:underline truncate"
-                      >
-                        {item.Shifra}
-                      </Link>
-                    </div>
-                    <h2 className="font-semibold text-lg truncate">
-                      {item.Emertimi}
-                    </h2>
-                    {item.Extras && (
-                      <p className="text-gray-500 text-sm mt-1 line-clamp-2">
-                        {item.Extras}
+                      <h2 className="font-semibold text-lg truncate">
+                        {item.Emertimi}
+                      </h2>
+                      {item.Extras && (
+                        <p className="text-gray-500 text-sm mt-1 line-clamp-2">
+                          {item.Extras}
+                        </p>
+                      )}
+                      <p className="text-gray-600 text-sm mt-2 truncate">
+                        Kodi: <span className="font-medium">{item.Shifra}</span>
                       </p>
-                    )}
-                    <p className="text-gray-600 text-sm mt-2 truncate">
-                      Kodi: <span className="font-medium">{item.Shifra}</span>
-                    </p>
-                    <p className="text-gray-600 text-sm truncate">
-                      Barkodi:{" "}
-                      <span className="font-medium">{item.Barkodi}</span>
-                    </p>
-                    <p className="text-gray-600 text-sm truncate">
-                      Prodhuesi:{" "}
-                      <span className="font-medium">{item.Prodhuesi}</span>
-                    </p>
-                    <div className="mt-4 text-sm text-blue-600 flex justify-between space-x-2 flex-wrap">
-                      <Link
-                        to={`/itemsdetail/${item.ID}?tab=pershkrim`}
-                        className="hover:underline whitespace-nowrap flex items-center text-base truncate"
-                      >
-                        Përshkrimi
-                        <IoIosArrowForward className="ml-1" />
-                      </Link>
-                      <Link
-                        to={`/itemsdetail/${item.ID}?tab=detaje`}
-                        className="hover:underline whitespace-nowrap flex items-center text-base truncate"
-                      >
-                        Detajet
-                        <IoIosArrowForward className="ml-1" />
-                      </Link>
-                      <Link
-                        to={`/itemsdetail/${item.ID}?tab=oem`}
-                        className="hover:underline whitespace-nowrap flex items-center text-base truncate"
-                      >
-                        OEM Code
-                        <IoIosArrowForward className="ml-1" />
-                      </Link>
-                      <Link
-                        to={`/itemsdetail/${item.ID}?tab=zevendesimet`}
-                        className="hover:underline whitespace-nowrap flex items-center text-base truncate"
-                      >
-                        Zëvendësimet
-                        <IoIosArrowForward className="ml-1" />
-                      </Link>
+                      <p className="text-gray-600 text-sm truncate">
+                        Barkodi:{" "}
+                        <span className="font-medium">{item.Barkodi}</span>
+                      </p>
+                      <p className="text-gray-600 text-sm truncate">
+                        Prodhuesi:{" "}
+                        <span className="font-medium">{item.Prodhuesi}</span>
+                      </p>
+                      <div className="mt-4 text-sm text-blue-600 flex justify-between space-x-2 flex-wrap">
+                        <Link
+                          to={`/itemsdetail/${item.ID}?tab=pershkrim`}
+                          className="hover:underline whitespace-nowrap flex items-center text-base truncate"
+                        >
+                          Përshkrimi
+                          <IoIosArrowForward className="ml-1" />
+                        </Link>
+                        <Link
+                          to={`/itemsdetail/${item.ID}?tab=detaje`}
+                          className="hover:underline whitespace-nowrap flex items-center text-base truncate"
+                        >
+                          Detajet
+                          <IoIosArrowForward className="ml-1" />
+                        </Link>
+                        <Link
+                          to={`/itemsdetail/${item.ID}?tab=oem`}
+                          className="hover:underline whitespace-nowrap flex items-center text-base truncate"
+                        >
+                          OEM Code
+                          <IoIosArrowForward className="ml-1" />
+                        </Link>
+                        <Link
+                          to={`/itemsdetail/${item.ID}?tab=zevendesimet`}
+                          className="hover:underline whitespace-nowrap flex items-center text-base truncate"
+                        >
+                          Zëvendësimet
+                          <IoIosArrowForward className="ml-1" />
+                        </Link>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="w-1/4 p-4 flex flex-col justify-between min-w-[200px]">
-                    <div className="flex items-center space-x-2 mb-4">
-                      <button
-                        onClick={() => handleDecrement(item.ID)}
-                        disabled={(quantities[item.ID] || 1) <= 1}
-                        className="border rounded p-1 disabled:opacity-50"
-                      >
-                        <HiMinus className="text-lg font-medium" />
-                      </button>
-                      <span className="font-medium w-8 text-center">
-                        {quantities[item.ID] || 1}
-                      </span>
-                      <button
-                        onClick={() => handleIncrement(item.ID)}
-                        className="border rounded p-1"
-                      >
-                        <HiMiniPlus className="text-lg font-medium" />
-                      </button>
-                      <button className="flex items-center w-full justify-center bg-red-500 hover:bg-red-600 text-white py-2 rounded">
-                        <FaShoppingCart className="mr-2" />
-                        Porosit
-                      </button>
+                    <div className="w-1/4 p-4 flex flex-col justify-between min-w-[200px]">
+                      <div className="flex items-center space-x-2 mb-4">
+                        <button
+                          onClick={() => handleDecrement(item.ID)}
+                          disabled={(quantities[item.ID] || 1) <= 1}
+                          className="border rounded p-1 disabled:opacity-50"
+                        >
+                          <HiMinus className="text-lg font-medium" />
+                        </button>
+                        <span className="font-medium w-8 text-center">
+                          {quantities[item.ID] || 1}
+                        </span>
+                        <button
+                          onClick={() => handleIncrement(item.ID)}
+                          className="border rounded p-1"
+                        >
+                          <HiMiniPlus className="text-lg font-medium" />
+                        </button>
+                        <button className="flex items-center w-full justify-center bg-red-500 hover:bg-red-600 text-white py-2 rounded">
+                          <FaShoppingCart className="mr-2" />
+                          Porosit
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              <div className="mt-6 mb-7 flex justify-center">
+                <Pagination
+                  current={currentPage}
+                  pageSize={pageSize}
+                  total={filteredItems.length}
+                  onChange={(page) => setCurrentPage(page)}
+                  showSizeChanger={false}
+                />
+              </div>
             </div>
           ) : (
             <p className="text-center text-gray-500">
@@ -301,7 +321,7 @@ const ItemsClient = () => {
       )}
 
       <Modal
-        visible={modalVisible}
+        open={modalVisible}
         footer={null}
         onCancel={() => debouncedCloseModal()}
         centered

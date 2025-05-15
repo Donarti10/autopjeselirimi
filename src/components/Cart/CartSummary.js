@@ -24,7 +24,7 @@ export const CartSummary = ({ subtotal, shipping, tax, total }) => {
         </div>
       </div>
       <div className="mt-6">
-        <Button variant="primary" className="w-full">
+        <Button type="primary" className="w-full bg-blue-600 hover:bg-blue-700">
           Vazhdo
         </Button>
       </div>

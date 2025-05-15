@@ -21,6 +21,7 @@ const Navbar = () => {
   const profileRef = useRef(null);
   const dropdownRef = useRef(null);
   const searchDropdownRef = useRef(null);
+  const latestSearchRef = useRef("");
   const user = localStorage.getItem("user");
   const subjectData = user ? JSON.parse(user) : null;
   const defaultSubject = subjectData?.ID || 706;
@@ -87,9 +88,6 @@ const Navbar = () => {
       const data = await response.json();
 
       const searchLower = value.toLowerCase().trim();
-      console.log("Search term:", searchLower);
-      console.log("API endpoint:", apiEndpoint);
-      console.log("API response:", data);
 
       const filteredItems = data.filter((item) => {
         const barkodi = item.Barkodi?.toLowerCase() || "";
@@ -101,15 +99,6 @@ const Navbar = () => {
         const extrasCodes = extras
           .split(",")
           .map((code) => code.replace(/\s+/g, "").trim());
-
-        console.log("Item:", {
-          barkodi,
-          shifra,
-          emertimi,
-          prodhuesi,
-          extras,
-          extrasCodes,
-        });
 
         const matchesExtras = extrasCodes.some((code) =>
           code.includes(searchLower)
@@ -124,9 +113,10 @@ const Navbar = () => {
         );
       });
 
-      console.log("Filtered items:", filteredItems);
-      setSearchItems(filteredItems);
-      setIsSearchDropdownOpen(filteredItems.length > 0);
+      if (value === latestSearchRef.current) {
+        setSearchItems(filteredItems);
+        setIsSearchDropdownOpen(filteredItems.length > 0);
+      }
     } catch (error) {
       toast.error("Failed to fetch search results.");
       console.error(error);
@@ -136,6 +126,7 @@ const Navbar = () => {
   const handleSearchChange = (e) => {
     const value = e.target.value;
     setSearchValue(value);
+    latestSearchRef.current = value;
     fetchSearchItems(value);
   };
 
