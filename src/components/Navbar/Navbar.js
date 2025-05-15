@@ -16,7 +16,7 @@ const Navbar = () => {
   const [searchItems, setSearchItems] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [loadingSubject, setLoadingSubject] = useState(false);
-  const [producer, setProducer] = useState(0); // Default producer to 0, can be made dynamic later
+  const [producer, setProducer] = useState(0);
 
   const profileRef = useRef(null);
   const dropdownRef = useRef(null);

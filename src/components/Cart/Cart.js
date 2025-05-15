@@ -1,4 +1,3 @@
-// Cart.jsx
 import React, { useState, useEffect } from "react";
 import { CartItem } from "./CartItem";
 import { CartSummary } from "./CartSummary";
@@ -8,13 +7,12 @@ import { ArrowLeftIcon } from "lucide-react";
 export const Cart = () => {
   const [cartData, setCartData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const url = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
     const fetchCartData = async () => {
       try {
-        const response = await fetch(
-          "http://192.168.88.129:90/api/Cart/id?id=1"
-        );
+        const response = await fetch(`${url}/Cart/id?id=1`);
         const data = await response.json();
         setCartData(data.cart);
         setLoading(false);

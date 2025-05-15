@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, useLocation, useNavigate } from "react-router-dom"; // Added useNavigate
+import { useParams, useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Spin } from "antd";
 import { MdFavoriteBorder } from "react-icons/md";
@@ -12,7 +12,7 @@ const ItemsClientDetailsPage = () => {
   const url = process.env.REACT_APP_API_URL;
   const { id } = useParams();
   const location = useLocation();
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -33,7 +33,7 @@ const ItemsClientDetailsPage = () => {
     const tab = params.get("tab");
     if (tab === "pershkrim") setSelectedTabIndex(0);
     else if (tab === "detaje") setSelectedTabIndex(1);
-    else if (tab === "zevendesimet") setSelectedTabIndex(2);
+    else if (tab === "oem") setSelectedTabIndex(2);
     else setSelectedTabIndex(0);
   }, [location.search]);
 
@@ -99,7 +99,6 @@ const ItemsClientDetailsPage = () => {
     }
   }, [item, url, subject]);
 
-  // Handle navigation to replacement item detail page
   const handleReplacementClick = (replacementId) => {
     navigate(`/itemsdetail/${replacementId}?tab=pershkrim`);
   };
@@ -212,7 +211,7 @@ const ItemsClientDetailsPage = () => {
                         Detajet
                       </Tab>
                       <Tab className="px-6 py-2 text-gray-600 cursor-pointer border-b-2 border-transparent hover:text-blue-600 focus:outline-none">
-                        Zëvendësimet
+                        OEM Code
                       </Tab>
                     </TabList>
                     <TabPanel className="mt-4">
@@ -291,80 +290,84 @@ const ItemsClientDetailsPage = () => {
                       </table>
                     </TabPanel>
                     <TabPanel className="mt-4">
-                      <h2 className="text-lg font-bold mb-4">Zëvendësimet</h2>
-                      {barcodeLoading ? (
-                        <div className="flex justify-center items-center h-32">
-                          <Spin />
-                        </div>
-                      ) : barcodeItems.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                          {barcodeItems.map((replacement) => (
-                            <div
-                              key={replacement.ID}
-                              className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
-                              onClick={() =>
-                                handleReplacementClick(replacement.ID)
-                              }
-                            >
-                              <div className="flex items-start space-x-4">
-                                <div className="w-24 h-24 flex-shrink-0">
-                                  {replacement.Photo ? (
-                                    <img
-                                      src={`data:image/jpeg;base64,${replacement.Photo}`}
-                                      alt={replacement.Emertimi}
-                                      className="w-full h-full object-contain rounded"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full bg-gray-100 flex items-center justify-center text-center text-gray-400 text-sm rounded">
-                                      Nuk ka Imazh
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex-1">
-                                  <h3 className="text-lg font-semibold text-gray-800">
-                                    {replacement.Emertimi}
-                                  </h3>
-                                  <p className="text-sm text-gray-600">
-                                    Shifra: {replacement.Shifra}
-                                  </p>
-                                  <p className="text-sm text-gray-600">
-                                    Barkodi: {replacement.Barkodi}
-                                  </p>
-                                  <p className="text-sm text-gray-600">
-                                    Prodhuesi: {replacement.Prodhuesi}
-                                  </p>
-                                  <div className="mt-2 flex items-center space-x-2">
-                                    <span className="text-lg font-semibold text-black">
-                                      ${replacement.Cmimi}
-                                    </span>
-                                    <span
-                                      className={`text-xs px-2 py-1 rounded-full ${
-                                        replacement.SasiaStoku > 0
-                                          ? "text-green-600 bg-green-100"
-                                          : "text-red-600 bg-red-100"
-                                      }`}
-                                    >
-                                      {replacement.SasiaStoku > 0
-                                        ? `Në Stok (${replacement.SasiaStoku})`
-                                        : "Jashtë Stokut"}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-700">
-                          Nuk u gjetën zëvendësime për këtë artikull. Provoni të
-                          kërkoni manualisht ose kontaktoni suportin.
-                        </p>
-                      )}
+                      <h2 className="text-lg font-bold mb-2">Përshkrim</h2>
+                      <ul className="list-disc list-inside mt-2 text-gray-600">
+                        <li>{item.Shifra}</li>
+                      </ul>
                     </TabPanel>
                   </Tabs>
                 </div>
               </div>
             </div>
+          </div>
+          <div className="p-20 pt-4">
+            <h2 className="text-lg font-bold mb-4">Zëvendësimet</h2>
+            {barcodeLoading ? (
+              <div className="flex justify-center items-center h-32">
+                <Spin />
+              </div>
+            ) : barcodeItems.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+                {barcodeItems.map((replacement) => (
+                  <div
+                    key={replacement.ID}
+                    className="border border-gray-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => handleReplacementClick(replacement.ID)}
+                  >
+                    <div className="flex items-start space-x-4">
+                      <div className="w-24 h-24 flex-shrink-0">
+                        {replacement.Photo ? (
+                          <img
+                            src={`data:image/jpeg;base64,${replacement.Photo}`}
+                            alt={replacement.Emertimi}
+                            className="w-full h-full object-contain rounded"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-100 flex items-center justify-center text-center text-gray-400 text-sm rounded">
+                            Nuk ka Imazh
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          {replacement.Emertimi}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Shifra: {replacement.Shifra}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Barkodi: {replacement.Barkodi}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Prodhuesi: {replacement.Prodhuesi}
+                        </p>
+                        <div className="mt-2 flex items-center space-x-2">
+                          <span className="text-lg font-semibold text-black">
+                            ${replacement.Cmimi}
+                          </span>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${
+                              replacement.SasiaStoku > 0
+                                ? "text-green-600 bg-green-100"
+                                : "text-red-600 bg-red-100"
+                            }`}
+                          >
+                            {replacement.SasiaStoku > 0
+                              ? `Në Stok (${replacement.SasiaStoku})`
+                              : "Jashtë Stokut"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-700">
+                Nuk u gjetën zëvendësime për këtë artikull. Provoni të kërkoni
+                manualisht ose kontaktoni suportin.
+              </p>
+            )}
           </div>
         </main>
       </div>

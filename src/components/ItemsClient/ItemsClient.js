@@ -249,6 +249,13 @@ const ItemsClient = () => {
                         <IoIosArrowForward className="ml-1" />
                       </Link>
                       <Link
+                        to={`/itemsdetail/${item.ID}?tab=oem`}
+                        className="hover:underline whitespace-nowrap flex items-center text-base truncate"
+                      >
+                        OEM Code
+                        <IoIosArrowForward className="ml-1" />
+                      </Link>
+                      <Link
                         to={`/itemsdetail/${item.ID}?tab=zevendesimet`}
                         className="hover:underline whitespace-nowrap flex items-center text-base truncate"
                       >

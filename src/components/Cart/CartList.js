@@ -56,10 +56,10 @@ const CartList = () => {
       const data = await response.json();
       const transformedData = data.map((item) => ({
         ...item,
-        key: item.id, // Add key for Table
-        Photo: null, // Add if you have photo data available
-        Shifra: item.number, // Map number to Shifra
-        Barkodi: item.number, // Using number as barcode (adjust if you have actual barcode)
+        key: item.id,
+        Photo: null,
+        Shifra: item.number,
+        Barkodi: item.number,
         Emertimi: item.subjectName,
         Extras: item.note,
         Prodhuesi: `${item.createdBy?.firstName} ${item.createdBy?.lastName}`,

@@ -70,7 +70,7 @@ export function LoginPage() {
     let newErrors = {};
     if (!username.trim()) newErrors.username = "Username is required";
     if (!password) newErrors.password = "Password is required";
-    else if (password.length < 6)
+    else if (password.length < 5)
       newErrors.password = "Password must be at least 6 characters long";
     if (!key) newErrors.key = "Device fingerprint is required";
 
