@@ -14,6 +14,7 @@ const ItemsClientDetails = () => {
   const navigate = useNavigate();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [addToCartLoading, setAddToCartLoading] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [barcodeItems, setBarcodeItems] = useState([]);
   const [barcodeLoading, setBarcodeLoading] = useState(false);
@@ -21,7 +22,7 @@ const ItemsClientDetails = () => {
   const [quantity, setQuantity] = useState(1);
 
   const user = localStorage.getItem("user");
-  const subject = user ? JSON.parse(user) : null;
+  const subjectID = user ? parseInt(user) : null;
 
   const handleSidebarToggle = (collapsed) => {
     setIsSidebarCollapsed(collapsed);
@@ -40,11 +41,11 @@ const ItemsClientDetails = () => {
     const fetchItemById = async () => {
       try {
         setLoading(true);
-        if (!subject) {
+        if (!subjectID) {
           throw new Error("No user logged in");
         }
         const response = await fetch(
-          `${url}/Item/client/id?id=${id}&subject=${subject}`
+          `${url}/Item/client/id?id=${id}&subject=${subjectID}`
         );
         if (!response.ok) {
           throw new Error(`Failed to fetch item: ${response.statusText}`);
@@ -59,54 +60,51 @@ const ItemsClientDetails = () => {
       }
     };
 
-    if (id && subject) {
+    if (id && subjectID) {
       fetchItemById();
     }
-  }, [id, subject, url]);
+  }, [id, subjectID, url]);
 
   useEffect(() => {
     const fetchReplacementItems = async () => {
-      if (!item || !subject) return;
+      if (!item || !subjectID) return;
 
       setBarcodeLoading(true);
       try {
-        let producerID = 0;
-        if (item.Prodhuesi) {
-          const producerResponse = await fetch(
-            `${url}/Producer/search?value=${encodeURIComponent(
-              item.Prodhuesi
-            )}`,
-            {
-              headers: { Accept: "*/*" },
-            }
+        const searchTerms = [
+          item.Barkodi || "",
+          item.Shifra || "",
+          item.Extras || "",
+        ].filter((term) => term.trim() !== "");
+
+        if (!searchTerms.length) {
+          setBarcodeItems([]);
+          return;
+        }
+
+        let allItems = [];
+        for (const term of searchTerms) {
+          const response = await fetch(
+            `${url}/Item/client/search?value=${encodeURIComponent(
+              term
+            )}&producer=0&subject=${subjectID}`
           );
-          if (!producerResponse.ok) {
+
+          if (!response.ok) {
             console.warn(
-              `Failed to fetch producer: ${producerResponse.status}`
+              `Search failed for term "${term}": ${response.status}`
             );
-          } else {
-            const producers = await producerResponse.json();
-            const matchingProducer = producers.find(
-              (p) => p.Emertimi.toLowerCase() === item.Prodhuesi.toLowerCase()
-            );
-            if (matchingProducer) {
-              producerID = matchingProducer["$ID"];
-            }
+            continue;
           }
+
+          const data = await response.json();
+          allItems = [...allItems, ...data];
         }
 
-        const response = await fetch(
-          `${url}/Item/client/search?value=${encodeURIComponent(
-            item.Barkodi
-          )}&producer=${producerID}&subject=${subject}`
+        const uniqueItems = Array.from(
+          new Map(allItems.map((i) => [i.ID, i])).values()
         );
-
-        if (!response.ok) {
-          throw new Error(`Search failed with status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        const replacementItems = data.filter((i) => i.ID !== item.ID);
+        const replacementItems = uniqueItems.filter((i) => i.ID !== item.ID);
 
         setBarcodeItems(replacementItems);
       } catch (error) {
@@ -120,67 +118,10 @@ const ItemsClientDetails = () => {
     if (item) {
       fetchReplacementItems();
     }
-  }, [item, url, subject]);
+  }, [item, url, subjectID]);
 
   const handleReplacementClick = (replacementId) => {
     navigate(`/itemsdetail/${replacementId}?tab=pershkrim`);
-  };
-
-  const handleAddToCart = async () => {
-    if (!subject) {
-      toast.error(
-        "Ju lutemi të identifikoheni për të shtuar artikuj në shportë."
-      );
-      return;
-    }
-
-    if (!item || item.SasiaStoku <= 0) {
-      toast.error("Artikulli është jashtë stokut.");
-      return;
-    }
-
-    if (quantity > item.SasiaStoku) {
-      toast.error(
-        `Sasia e zgjedhur tejkalon stokun e disponueshëm (${item.SasiaStoku}).`
-      );
-      return;
-    }
-
-    try {
-      const response = await fetch(`${url}/Cart`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "*/*",
-        },
-        body: JSON.stringify({
-          id: 0,
-          subjectIdentify: parseInt(subject),
-          subjectName: item.Emertimi || "Cart Item",
-          note: `Shtuar artikulli ${item.Emertimi} (ID: ${id})`,
-          createdByID: parseInt(subject),
-          details: [
-            {
-              itemIdentify: parseInt(id),
-              quantity: quantity,
-            },
-          ],
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Dështoi shtimi në shportë: ${response.status} - ${errorText}`
-        );
-      }
-
-      toast.success("Artikulli u shtua në shportë me sukses!");
-      navigate("/cart");
-    } catch (error) {
-      toast.error("Dështoi shtimi i artikullit në shportë: " + error.message);
-      console.error("Gabim gjatë shtimit në shportë:", error);
-    }
   };
 
   const handleIncrement = () => {
@@ -189,6 +130,83 @@ const ItemsClientDetails = () => {
 
   const handleDecrement = () => {
     setQuantity((prev) => Math.max(prev - 1, 1));
+  };
+
+  const handleAddToCart = async () => {
+    if (!subjectID) {
+      toast.error("Nuk ka përdorues të kyçur.");
+      return;
+    }
+
+    setAddToCartLoading(true);
+    try {
+      const response = await fetch(
+        `${url}/Cart/current/subject?id=${subjectID}`
+      );
+      if (!response.ok) {
+        throw new Error("Dështoi marrja e shportës aktuale");
+      }
+      const cartData = await response.json();
+
+      if (cartData && cartData.status === "Në pritje") {
+        const cartDetailBody = {
+          id: 0,
+          cartID: cartData.id,
+          itemIdentify: parseInt(id),
+          quantity: quantity,
+          createdByID: subjectID,
+        };
+
+        const detailResponse = await fetch(`${url}/CartDetail`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(cartDetailBody),
+        });
+
+        if (!detailResponse.ok) {
+          throw new Error("Dështoi shtimi i artikullit në shportë");
+        }
+
+        toast.success("Artikulli u shtua në shportë me sukses!");
+      } else {
+        const cartBody = {
+          id: 0,
+          subjectIdentify: subjectID,
+          subjectName: "",
+          note: "",
+          createdByID: subjectID,
+          details: [
+            {
+              itemIdentify: parseInt(id),
+              quantity: quantity,
+            },
+          ],
+        };
+
+        const cartResponse = await fetch(`${url}/Cart`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(cartBody),
+        });
+
+        if (!cartResponse.ok) {
+          throw new Error("Dështoi krijimi i shportës së re");
+        }
+
+        toast.success("Shporta e re u krijua dhe artikulli u shtua me sukses!");
+      }
+    } catch (error) {
+      toast.error(
+        error.message || "Ndodhi një gabim gjatë shtimit në shportë."
+      );
+      console.error("Gabim gjatë shtimit në shportë:", error);
+    } finally {
+      setAddToCartLoading(false);
+    }
   };
 
   if (loading) {
@@ -290,10 +308,12 @@ const ItemsClientDetails = () => {
                   </div>
                   <button
                     onClick={handleAddToCart}
-                    className="ml-4 w-[50%] bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
-                    disabled={item.SasiaStoku <= 0}
+                    disabled={addToCartLoading}
+                    className={`ml-4 w-[50%] bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors ${
+                      addToCartLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                   >
-                    Shto në Shportë
+                    {addToCartLoading ? "Duke shtuar..." : "Shto në Shportë"}
                   </button>
                 </div>
                 <div>
@@ -317,7 +337,13 @@ const ItemsClientDetails = () => {
                       <h2 className="text-lg font-bold mb-2">Përshkrim</h2>
                       <ul className="list-disc list-inside mt-2 text-gray-600">
                         <li>Emërtimi: {item.Emertimi}</li>
-                        <li>Prodhuesi: {item.Prodhuesi}</li>
+                        <li>
+                          Prodhuesi:{" "}
+                          <span className="text-red-600 font-bold">
+                            {" "}
+                            {item.Prodhuesi}{" "}
+                          </span>
+                        </li>
                         <li>Çmimi me TVSH: {item.Cmimi} €</li>
                         <li>
                           Disponueshmëria:{" "}

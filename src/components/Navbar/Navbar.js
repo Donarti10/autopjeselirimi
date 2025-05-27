@@ -1,15 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import logo from "../../assets/Navbar/lirimilogo.png";
+import logo from "../../assets/Navbar/logo3.png";
 import { IoIosStarOutline } from "react-icons/io";
 import { GrCart } from "react-icons/gr";
 import { CiSearch } from "react-icons/ci";
 import { FaUserCircle, FaUser, FaSignOutAlt } from "react-icons/fa";
 import toast from "react-hot-toast";
+import { useCart } from "../Context/Context";
 
 const Navbar = () => {
   const url = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
+  const { cartItemCount, updateCartItemCount } = useCart();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -43,6 +45,28 @@ const Navbar = () => {
     };
     fetchSubjects();
   }, [url]);
+
+  useEffect(() => {
+    const fetchCartItemCount = async () => {
+      if (!defaultSubject) return;
+      try {
+        const response = await fetch(
+          `${url}/Cart/current/subject?id=${defaultSubject}`
+        );
+        if (!response.ok) throw new Error("Failed to fetch cart");
+        const cartData = await response.json();
+        if (cartData && cartData.details) {
+          updateCartItemCount(cartData.details.length);
+        } else {
+          updateCartItemCount(0);
+        }
+      } catch (error) {
+        console.error("Error fetching cart:", error);
+        updateCartItemCount(0);
+      }
+    };
+    fetchCartItemCount();
+  }, [defaultSubject, url, updateCartItemCount]);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -150,14 +174,14 @@ const Navbar = () => {
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-10">
           <Link to="/" className="p-[max(6px,.5vw)] pr-10 cursor-pointer">
-            <img src={logo} className="w-full h-16" alt="Logo" />
+            <img src={logo} className="w-full h-12" alt="Logo" />
           </Link>
           <div className="flex justify-between">
             <div className="flex justify-start items-start w-[500px] p-[max(6px,.5vw)] relative">
               <div className="flex items-center relative w-full">
                 <input
                   type="text"
-                  placeholder="Kodi OE / Pjesa nr. ose emrin / Barkodin"
+                  placeholder="Kërko me: Shifër, Barkod, OEM ose Artikull"
                   value={searchValue}
                   onChange={handleSearchChange}
                   onKeyDown={handleSearchSubmit}
@@ -217,8 +241,13 @@ const Navbar = () => {
 
         <div className="flex items-center gap-5 mr-7">
           <IoIosStarOutline className="text-white text-[max(13px,1.2vw)]" />
-          <Link to={"/cart"}>
+          <Link to={"/cart"} className="relative">
             <GrCart className="text-white text-[max(13px,1vw)]" />
+            {cartItemCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1 py-0.5">
+                {cartItemCount}
+              </span>
+            )}
           </Link>
           <div className="relative">
             <div

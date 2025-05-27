@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-
 import { IoIosStats } from "react-icons/io";
 import { FiUsers } from "react-icons/fi";
 import { RiListCheck3 } from "react-icons/ri";
@@ -34,17 +33,17 @@ const Sidebar = ({ onToggle }) => {
       icon: <IoIosStats />,
     },
     {
-      name: "Subjektet dhe Përdoruesit",
+      name: "Klientat",
       to: "/users",
       icon: <FiUsers />,
     },
     {
-      name: "Artikujt",
+      name: "Artikujt Admin",
       to: "/items",
       icon: <RiListCheck3 />,
     },
     {
-      name: "Linjë Transporti",
+      name: "Orari i Busëve Admin",
       to: "/transport",
       icon: <TbTruckDelivery />,
     },
@@ -52,12 +51,12 @@ const Sidebar = ({ onToggle }) => {
 
   const commonItems = [
     {
-      name: "Artikujt",
+      name: "Artikujt ",
       to: "/items1",
       icon: <RiListCheck3 />,
     },
     {
-      name: "Linjë Transporti",
+      name: "Orari i Busëve ",
       to: "/transportclient",
       icon: <TbTruckDelivery />,
     },
@@ -74,9 +73,9 @@ const Sidebar = ({ onToggle }) => {
 
   return (
     <div
-      className={`h-screen sticky top-0 bg-gray-50 border-r overflow-x-hidden
+      className={`h-screen sticky top-0 border-r overflow-x-hidden
         transition-all duration-300 flex flex-col justify-between
-        ${isCollapsed ? "w-16" : "w-72"} flex-shrink-0`}
+        ${isCollapsed ? "w-16" : "w-60"} flex-shrink-0`}
     >
       <div>
         <ul className="pt-20">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Breadcrumb, Table, Input, Select, Modal, Tooltip, Spin } from "antd";
+import { Breadcrumb, Table, Input, Select, Modal, Tooltip } from "antd";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
 import debounce from "lodash/debounce";
@@ -56,7 +56,9 @@ const Items = () => {
         }`
       );
       if (!response.ok) throw new Error(`Error: ${response.status}`);
-      const data = await response.json();
+      let data = await response.json();
+      // Sort items by Stoku in descending order
+      data = data.sort((a, b) => b.Stoku - a.Stoku);
       setItems(data);
 
       if (data.length === 1 && data[0].Barkodi) {
@@ -79,7 +81,9 @@ const Items = () => {
         `${url}/Item/admin/search?value=${barcode}&producer=${producerID || 0}`
       );
       if (!response.ok) throw new Error(`Error: ${response.status}`);
-      const data = await response.json();
+      let data = await response.json();
+      // Sort barcode items by Stoku in descending order
+      data = data.sort((a, b) => b.Stoku - a.Stoku);
       setBarcodeItems(data);
     } catch (error) {
       toast.error("Marrja e artikujve të barkodit dështoi.");
@@ -93,12 +97,14 @@ const Items = () => {
     fetchItems();
   }, [value, producerID]);
 
-  const filteredItems = items.filter((item) => {
-    const search = value ? value.toLowerCase() : "";
-    const emertimi = item.Emertimi ? item.Emertimi.toLowerCase() : "";
-    const extras = item.Extras ? item.Extras.toLowerCase() : "";
-    return emertimi.includes(search) || extras.includes(search);
-  });
+  const filteredItems = items
+    .filter((item) => {
+      const search = value ? value.toLowerCase() : "";
+      const emertimi = item.Emertimi ? item.Emertimi.toLowerCase() : "";
+      const extras = item.Extras ? item.Extras.toLowerCase() : "";
+      return emertimi.includes(search) || extras.includes(search);
+    })
+    .sort((a, b) => b.Stoku - a.Stoku); // Ensure filtered items are sorted
 
   const breadcrumbItems = [
     { title: <Link to="/">Faqja Kryesore</Link> },
@@ -131,17 +137,7 @@ const Items = () => {
       render: (photo) => (
         <div className="flex items-center w-full justify-center rounded-full">
           {photo && (
-            <Tooltip
-              color="white"
-              title={
-                <img
-                  src={`data:image/jpeg;base64,${photo}`}
-                  alt="Preview"
-                  style={{ width: "400px", height: "400px" }}
-                />
-              }
-              placement="right"
-            >
+            <Tooltip color="white" placement="right">
               <img
                 src={`data:image/jpeg;base64,${photo}`}
                 alt="Product"
@@ -164,12 +160,13 @@ const Items = () => {
       title: "Emertimi",
       render: (record) => (
         <div>
-          <p>{record?.Emertimi}</p>
-          <p className="text-gray-400 text-xs">
+          <p className="font-semibold text-[13px]">{record?.Emertimi}</p>
+          <p className="text-gray-400 text-[11px]">
             {record?.Extras
               ? record.Extras.split(",").map((extra, index) => (
                   <span key={index}>
                     {highlightMatch(extra.trim(), value)}
+                    OEM:
                     {index < record.Extras.split(",").length - 1 && ", "}
                   </span>
                 ))
@@ -213,22 +210,24 @@ const Items = () => {
       title: "Stoku",
       dataIndex: "Stoku",
       key: "Stoku",
-      render: (value) => (
-        <span
-          style={{
-            backgroundColor:
-              value < 1 ? "#FEE2E2" : value > 0 ? "#D1FAE5" : "#FEE2E2",
-            color: "#111",
-            padding: "2px 4px",
-            borderRadius: "4px",
-            display: "inline-block",
-            minWidth: "30px",
-            textAlign: "center",
-          }}
-        >
-          {value}
-        </span>
-      ),
+      render: (value) => {
+        return (
+          <span
+            style={{
+              backgroundColor:
+                value < 1 ? "#FEE2E2" : value > 0 ? "#D1FAE5" : "#FEE2E2",
+              color: "#111",
+              padding: "2px 4px",
+              borderRadius: "4px",
+              display: "inline-block",
+              minWidth: "40px",
+              textAlign: "center",
+            }}
+          >
+            {value}
+          </span>
+        );
+      },
     },
   ];
 
@@ -280,6 +279,7 @@ const Items = () => {
             columns={columns}
             rowKey="id"
             size="small"
+            pagination={{ defaultPageSize: 15 }}
           />
         )}
       </div>
@@ -300,6 +300,7 @@ const Items = () => {
                 columns={columns}
                 rowKey="id"
                 size="small"
+                pagination={{ defaultPageSize: 15 }}
               />
             </div>
           )

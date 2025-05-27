@@ -38,13 +38,9 @@ export const CartItem = ({ item }) => {
             <h3 className="text-lg font-medium text-gray-900">
               {item.name || "Unnamed Item"}
             </h3>
-            <p className="text-lg font-medium text-gray-900">
-              {item.price ? `${(item.price * quantity).toFixed(2)}€` : "N/A"}
-            </p>
+            <p className="text-lg font-medium text-gray-900">{item.price}€</p>
           </div>
-          <p className="mt-1 text-sm text-gray-500">
-            NR #: {item.partNumber || "N/A"}
-          </p>
+          <p className="mt-1 text-sm text-gray-500">NR #: {item.partNumber}</p>
         </div>
         <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center border border-gray-300 rounded-md">

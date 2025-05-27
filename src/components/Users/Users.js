@@ -44,7 +44,7 @@ const Users = () => {
 
   const breadcrumbItems = [
     { title: <Link to="/">Faqja Kryesore</Link> },
-    { title: "Subjektet dhe Përdoruesit" },
+    { title: "Klientat" },
   ];
 
   const columns = [
@@ -131,10 +131,8 @@ const Users = () => {
             className="text-sm text-gray-600 mb-2"
             items={breadcrumbItems}
           />
-          <h1 className="font-bold text-2xl">Subjektet dhe Përdoruesit</h1>
-          <span className="font-normal">
-            Menaxhoni Subjektet dhe Përdoruesit
-          </span>
+          <h1 className="font-bold text-2xl">Klientat</h1>
+          <span className="font-normal">Menaxhoni Klientat</span>
         </div>
         <button
           onClick={() => setDrawerVisible(true)}
@@ -146,7 +144,7 @@ const Users = () => {
       </header>
       <Input
         size="small"
-        placeholder="Kërko përdoruesit..."
+        placeholder="Kërko Klientat..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
         className="border p-2 rounded mb-4 w-fit"
